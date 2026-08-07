@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "879325429404",
+    "project_id": "shopwise-160a3",
+    "storage_bucket": "shopwise-160a3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879325429404:android:c610fa8bc680c6d0ccb759",
+        "android_client_info": {
+          "package_name": "com.example.shopwise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6ICZp2DXppPlcoCCQGAWSbGHCQEfx-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879325429404:android:6d1254109061bf09ccb759",
+        "android_client_info": {
+          "package_name": "com.shopwise.india"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6ICZp2DXppPlcoCCQGAWSbGHCQEfx-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879325429404:android:0e8b1e51ac9a689dccb759",
+        "android_client_info": {
+          "package_name": "com.shopwise.shopwise_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6ICZp2DXppPlcoCCQGAWSbGHCQEfx-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
