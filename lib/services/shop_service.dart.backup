@@ -1,0 +1,154 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../models/shop.dart';
+
+class ShopService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  CollectionReference<Map<String, dynamic>> get _shops {
+    return _firestore.collection('shops');
+  }
+
+  /// Create a new shop for the currently logged-in shop owner.
+  Future<String> createShop(Shop shop) async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No authenticated user found.');
+    }
+
+    final DocumentReference<Map<String, dynamic>> doc = _shops.doc();
+
+    final DateTime now = DateTime.now();
+
+    final Shop shopToSave = shop.copyWith(
+      id: doc.id,
+      ownerId: user.uid,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await doc.set(shopToSave.toMap());
+
+    return doc.id;
+  }
+
+  /// Get the shop belonging to the current shop owner.
+  Future<Shop?> getMyShop() async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _shops
+        .where('ownerId', isEqualTo: user.uid)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      return null;
+    }
+
+    final document = snapshot.docs.first;
+    final data = document.data();
+
+    // Always use the Firestore document ID as the shop ID.
+    data['id'] = document.id;
+
+    return Shop.fromMap(data);
+  }
+
+  /// Get a shop by its Firestore document ID.
+  Future<Shop?> getShopById(String shopId) async {
+    if (shopId.trim().isEmpty) {
+      return null;
+    }
+
+    final DocumentSnapshot<Map<String, dynamic>> document = await _shops
+        .doc(shopId)
+        .get();
+
+    if (!document.exists || document.data() == null) {
+      return null;
+    }
+
+    return Shop.fromMap(document.data()!);
+  }
+
+  /// Get a shop using its owner ID.
+  ///
+  /// Used as a fallback for older products that were created
+  /// before shopId was stored correctly.
+  Future<Shop?> getShopByOwnerId(String ownerId) async {
+    if (ownerId.trim().isEmpty) {
+      return null;
+    }
+
+    final QuerySnapshot<Map<String, dynamic>> snapshot = await _shops
+        .where('ownerId', isEqualTo: ownerId)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      return null;
+    }
+
+    final document = snapshot.docs.first;
+    final data = document.data();
+
+    data['id'] = document.id;
+
+    return Shop.fromMap(data);
+  }
+
+  /// Update the current shop owner's shop.
+  Future<void> updateShop(Shop shop) async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No authenticated user found.');
+    }
+
+    await _shops
+        .doc(shop.id)
+        .update(
+          shop.copyWith(ownerId: user.uid, updatedAt: DateTime.now()).toMap(),
+        );
+  }
+
+  /// Watch the current owner's shop in real time.
+  Stream<Shop?> watchMyShop() {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      return Stream.value(null);
+    }
+
+    return _shops
+        .where('ownerId', isEqualTo: user.uid)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+          if (snapshot.docs.isEmpty) {
+            return null;
+          }
+
+          return Shop.fromMap(snapshot.docs.first.data());
+        });
+  }
+
+  /// Delete the current owner's shop.
+  Future<void> deleteShop(String shopId) async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception('No authenticated user found.');
+    }
+
+    await _shops.doc(shopId).delete();
+  }
+}

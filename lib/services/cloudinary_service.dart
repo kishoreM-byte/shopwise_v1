@@ -1,0 +1,53 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:http/http.dart' as http;
+
+class CloudinaryService {
+  CloudinaryService._();
+
+  static const String _cloudName = 'jyulza0z';
+  static const String _uploadPreset = 'shopwise_images';
+
+  static const String _uploadUrl =
+      'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
+
+  static Future<String> uploadImage({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(_uploadUrl),
+    );
+
+    request.fields['upload_preset'] = _uploadPreset;
+    request.fields['folder'] = 'shopwise';
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: fileName,
+      ),
+    );
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Cloudinary upload failed (${response.statusCode}): $responseBody',
+      );
+    }
+
+    final data = jsonDecode(responseBody) as Map<String, dynamic>;
+    final secureUrl = data['secure_url'];
+
+    if (secureUrl is! String || secureUrl.isEmpty) {
+      throw Exception('Cloudinary did not return a secure image URL.');
+    }
+
+    return secureUrl;
+  }
+}

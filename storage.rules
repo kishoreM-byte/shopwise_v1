@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerId) {
+      return signedIn() && request.auth.uid == ownerId;
+    }
+
+    // Shop owner images
+    match /shops/{ownerId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(ownerId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(ownerId);
+    }
+
+    // Product images
+    match /products/{ownerId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(ownerId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(ownerId);
+    }
+
+    // User profile images
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(userId);
+    }
+  }
+}
