@@ -27,13 +27,11 @@ class _TravelCostCardState extends State<TravelCostCard> {
     text: '10',
   );
 
-  final TextEditingController _efficiencyController = TextEditingController(
-    text: '15',
-  );
+  final TextEditingController _efficiencyController =
+      TextEditingController();
 
-  final TextEditingController _energyPriceController = TextEditingController(
-    text: '100',
-  );
+  final TextEditingController _energyPriceController =
+      TextEditingController();
 
   final TextEditingController _tollController = TextEditingController(
     text: '0',
@@ -48,12 +46,25 @@ class _TravelCostCardState extends State<TravelCostCard> {
   void initState() {
     super.initState();
 
+    _applyVehicleDefaults(_vehicleType);
     _applyRouteDistance();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _calculateResult();
     });
+  }
+
+  void _applyVehicleDefaults(VehicleType type) {
+    final VehicleProfile profile =
+        TravelCostService.vehicleProfiles.firstWhere(
+      (profile) => profile.type == type,
+    );
+
+    _efficiencyController.text =
+        profile.defaultEfficiency.toString();
+    _energyPriceController.text =
+        profile.defaultEnergyPrice.toString();
   }
 
   @override
@@ -222,20 +233,7 @@ class _TravelCostCardState extends State<TravelCostCard> {
 
               setState(() {
                 _vehicleType = value;
-
-                if (value == VehicleType.bike) {
-                  _efficiencyController.text = '40';
-                  _energyPriceController.text = '100';
-                } else if (value == VehicleType.car) {
-                  _efficiencyController.text = '15';
-                  _energyPriceController.text = '100';
-                } else if (value == VehicleType.electricBike) {
-                  _efficiencyController.text = '35';
-                  _energyPriceController.text = '8';
-                } else {
-                  _efficiencyController.text = '6';
-                  _energyPriceController.text = '8';
-                }
+                _applyVehicleDefaults(value);
               });
 
               _calculateResult();

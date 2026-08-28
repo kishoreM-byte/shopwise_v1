@@ -22,6 +22,14 @@ class RouteService {
 
   static final Map<String, ShopRouteResult> _routeCache = {};
 
+  /// Clears cached routes.
+  ///
+  /// Primarily useful for deterministic tests and when route data
+  /// needs to be explicitly refreshed.
+  static void clearCache() {
+    _routeCache.clear();
+  }
+
   Future<ShopRouteResult> getDrivingRoute({
     required double customerLatitude,
     required double customerLongitude,
