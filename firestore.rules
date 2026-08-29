@@ -65,12 +65,26 @@ service cloud.firestore {
 
         allow create: if signedIn()
           && reviewId == request.auth.uid
-          && request.resource.data.userId == request.auth.uid;
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.productId == productId
+          && request.resource.data.rating is number
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.comment is string
+          && request.resource.data.comment.size() >= 3
+          && request.resource.data.comment.size() <= 500;
 
         allow update: if signedIn()
           && reviewId == request.auth.uid
           && resource.data.userId == request.auth.uid
-          && request.resource.data.userId == request.auth.uid;
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.productId == resource.data.productId
+          && request.resource.data.rating is number
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.comment is string
+          && request.resource.data.comment.size() >= 3
+          && request.resource.data.comment.size() <= 500;
 
         allow delete: if signedIn()
           && reviewId == request.auth.uid

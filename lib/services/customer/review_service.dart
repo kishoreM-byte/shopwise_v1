@@ -59,82 +59,40 @@ class ReviewService {
       throw Exception('Please write a little more about your experience.');
     }
 
-    final DocumentReference<Map<String, dynamic>> productRef =
-        _product(trimmedProductId);
+    final productRef = _product(trimmedProductId);
+    final reviewRef = _reviews(trimmedProductId).doc(user.uid);
 
-    final DocumentReference<Map<String, dynamic>> reviewRef =
-        _reviews(trimmedProductId).doc(user.uid);
+    final productSnapshot = await productRef.get();
 
-    await _firestore.runTransaction((transaction) async {
-      final productSnapshot = await transaction.get(productRef);
+    if (!productSnapshot.exists) {
+      throw Exception('Product not found.');
+    }
 
-      if (!productSnapshot.exists) {
-        throw Exception('Product not found.');
-      }
+    final existingReview = await reviewRef.get();
 
-      final reviewSnapshot = await transaction.get(reviewRef);
-
-      final Map<String, dynamic> reviewData = {
-        'id': user.uid,
-        'productId': trimmedProductId,
-        'userId': user.uid,
-        'userName': user.displayName?.trim().isNotEmpty == true
-            ? user.displayName!.trim()
-            : 'ShopWise User',
-        'rating': rating,
-        'comment': trimmedComment,
-        'createdAt': reviewSnapshot.exists &&
-                reviewSnapshot.data()?['createdAt'] != null
-            ? reviewSnapshot.data()!['createdAt']
-            : FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      // Read all existing reviews before the first transaction write.
-      // Firestore transactions require all reads to happen before writes.
-      final reviewsSnapshot = await _reviews(trimmedProductId).get();
-
-      double totalRating = 0;
-      int reviewCount = 0;
-
-      for (final review in reviewsSnapshot.docs) {
-        if (review.id == user.uid) {
-          totalRating += rating;
-          reviewCount++;
-          continue;
-        }
-
-        final dynamic value = review.data()['rating'];
-
-        if (value is num && value.isFinite) {
-          totalRating += value.toDouble().clamp(1.0, 5.0);
-          reviewCount++;
-        }
-      }
-
-      if (!reviewSnapshot.exists) {
-        reviewCount++;
-        totalRating += rating;
-      }
-
-      transaction.set(reviewRef, reviewData);
-
-      final double averageRating = reviewCount > 0
-          ? double.parse((totalRating / reviewCount).toStringAsFixed(1))
-          : 0;
-
-      transaction.update(productRef, {
-        'rating': averageRating,
-        'reviewCount': reviewCount,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    await reviewRef.set({
+      'id': user.uid,
+      'productId': trimmedProductId,
+      'userId': user.uid,
+      'userName': user.displayName?.trim().isNotEmpty == true
+          ? user.displayName!.trim()
+          : 'ShopWise User',
+      'rating': rating,
+      'comment': trimmedComment,
+      'createdAt': existingReview.exists &&
+              existingReview.data()?['createdAt'] != null
+          ? existingReview.data()!['createdAt']
+          : FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> deleteReview(String productId) async {
     final User? user = _auth.currentUser;
 
-    if (user == null) return;
+    if (user == null) {
+      throw Exception('Please sign in to manage your review.');
+    }
 
     final String trimmedProductId = productId.trim();
 
@@ -142,49 +100,16 @@ class ReviewService {
       throw Exception('Invalid product.');
     }
 
-    final DocumentReference<Map<String, dynamic>> productRef =
-        _product(trimmedProductId);
-
     final DocumentReference<Map<String, dynamic>> reviewRef =
         _reviews(trimmedProductId).doc(user.uid);
 
-    await _firestore.runTransaction((transaction) async {
-      final reviewSnapshot = await transaction.get(reviewRef);
+    final reviewSnapshot = await reviewRef.get();
 
-      if (!reviewSnapshot.exists) {
-        return;
-      }
+    if (!reviewSnapshot.exists) {
+      return;
+    }
 
-      final reviewsSnapshot = await _reviews(trimmedProductId).get();
-
-      double totalRating = 0;
-      int reviewCount = 0;
-
-      for (final review in reviewsSnapshot.docs) {
-        if (review.id == user.uid) {
-          continue;
-        }
-
-        final dynamic value = review.data()['rating'];
-
-        if (value is num && value.isFinite) {
-          totalRating += value.toDouble().clamp(1.0, 5.0);
-          reviewCount++;
-        }
-      }
-
-      final double averageRating = reviewCount > 0
-          ? double.parse((totalRating / reviewCount).toStringAsFixed(1))
-          : 0;
-
-      transaction.delete(reviewRef);
-
-      transaction.update(productRef, {
-        'rating': averageRating,
-        'reviewCount': reviewCount,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    });
+    await reviewRef.delete();
   }
 
   Future<ProductReview?> getMyReview(String productId) async {

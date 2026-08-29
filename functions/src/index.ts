@@ -1,5 +1,8 @@
 import {setGlobalOptions} from "firebase-functions";
-import {onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {
+  onDocumentUpdated,
+  onDocumentWritten,
+} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
 import {FieldValue} from "firebase-admin/firestore";
 
@@ -72,5 +75,46 @@ export const onEnquiryStatusChanged = onDocumentUpdated(
     console.log(
       `Created ${currentStatus} notification for customer ${customerId}`,
     );
+  },
+);
+
+
+export const onProductReviewChanged = onDocumentWritten(
+  "products/{productId}/reviews/{reviewId}",
+  async (event) => {
+    const productId = event.params.productId;
+
+    const reviewsSnapshot = await admin
+      .firestore()
+      .collection("products")
+      .doc(productId)
+      .collection("reviews")
+      .get();
+
+    let totalRating = 0;
+    let reviewCount = 0;
+
+    for (const review of reviewsSnapshot.docs) {
+      const value = review.data().rating;
+
+      if (typeof value === "number" && Number.isFinite(value)) {
+        totalRating += Math.min(5, Math.max(1, value));
+        reviewCount++;
+      }
+    }
+
+    const averageRating = reviewCount > 0 ?
+      Math.round((totalRating / reviewCount) * 10) / 10 :
+      0;
+
+    await admin
+      .firestore()
+      .collection("products")
+      .doc(productId)
+      .update({
+        rating: averageRating,
+        reviewCount,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
   },
 );
