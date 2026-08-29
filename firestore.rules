@@ -36,11 +36,26 @@ service cloud.firestore {
       allow read: if true;
 
       allow create: if signedIn()
-        && request.resource.data.ownerId == request.auth.uid;
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.shopId is string
+        && request.resource.data.name is string
+        && request.resource.data.category is string
+        && request.resource.data.description is string
+        && request.resource.data.price is number
+        && request.resource.data.stock is number
+        && request.resource.data.isAvailable is bool
+        && request.resource.data.imageUrls is list
+        && request.resource.data.imageUrls.size() <= 6
+        && request.resource.data.rating is number
+        && request.resource.data.reviewCount is number
+        && request.resource.data.hasOffer is bool;
 
       allow update: if signedIn()
         && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == request.auth.uid;
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.shopId == resource.data.shopId
+        && request.resource.data.imageUrls is list
+        && request.resource.data.imageUrls.size() <= 6;
 
       allow delete: if signedIn()
         && resource.data.ownerId == request.auth.uid;

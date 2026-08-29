@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
@@ -12,27 +13,41 @@ class CloudinaryService {
   static const String _uploadUrl =
       'https://api.cloudinary.com/v1_1/$_cloudName/image/upload';
 
+  static const Duration _uploadTimeout = Duration(seconds: 30);
+
   static Future<String> uploadImage({
     required Uint8List bytes,
     required String fileName,
   }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse(_uploadUrl),
-    );
+    if (bytes.isEmpty) {
+      throw ArgumentError('Image data cannot be empty.');
+    }
+
+    final String safeFileName = normalizeFileName(fileName);
+
+    if (safeFileName.isEmpty) {
+      throw ArgumentError('Image file name cannot be empty.');
+    }
+
+    final request = http.MultipartRequest('POST', Uri.parse(_uploadUrl));
 
     request.fields['upload_preset'] = _uploadPreset;
     request.fields['folder'] = 'shopwise';
 
     request.files.add(
-      http.MultipartFile.fromBytes(
-        'file',
-        bytes,
-        filename: fileName,
-      ),
+      http.MultipartFile.fromBytes('file', bytes, filename: safeFileName),
     );
 
-    final response = await request.send();
+    final http.StreamedResponse response;
+
+    try {
+      response = await request.send().timeout(_uploadTimeout);
+    } on TimeoutException {
+      throw Exception(
+        'Image upload timed out. Please check your connection and try again.',
+      );
+    }
+
     final responseBody = await response.stream.bytesToString();
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -49,5 +64,17 @@ class CloudinaryService {
     }
 
     return secureUrl;
+  }
+
+  static String normalizeFileName(String fileName) {
+    final String normalized = fileName.trim();
+
+    if (normalized.isEmpty) {
+      return '';
+    }
+
+    return normalized
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_');
   }
 }
