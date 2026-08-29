@@ -74,32 +74,39 @@ class EnquiryService {
     });
   }
 
-  Future<void> updateEnquiryStatus(
-    String enquiryId,
-    String status,
-  ) async {
+  Future<void> updateEnquiryStatus(String enquiryId, String status) async {
     final User? user = _auth.currentUser;
 
     if (user == null) {
       throw Exception('Please sign in to update an enquiry.');
     }
 
-    final normalizedStatus = status.trim().toLowerCase();
+    final String normalizedStatus = status.trim().toLowerCase();
 
-    if (normalizedStatus != 'accepted' &&
-        normalizedStatus != 'rejected') {
+    if (normalizedStatus != 'accepted' && normalizedStatus != 'rejected') {
       throw Exception('Invalid enquiry status.');
     }
 
-    final document = await _enquiries.doc(enquiryId).get();
+    final String normalizedEnquiryId = enquiryId.trim();
 
-    if (!document.exists) {
+    if (normalizedEnquiryId.isEmpty) {
+      throw Exception('Invalid enquiry.');
+    }
+
+    final DocumentReference<Map<String, dynamic>> enquiryRef = _enquiries.doc(
+      normalizedEnquiryId,
+    );
+
+    final DocumentSnapshot<Map<String, dynamic>> document = await enquiryRef
+        .get();
+
+    if (!document.exists || document.data() == null) {
       throw Exception('Enquiry no longer exists.');
     }
 
-    final data = document.data();
+    final Map<String, dynamic> data = document.data()!;
 
-    if (data == null || data['ownerId'] != user.uid) {
+    if (data['ownerId'] != user.uid) {
       throw Exception('You are not authorized to update this enquiry.');
     }
 
@@ -107,10 +114,14 @@ class EnquiryService {
       throw Exception('This enquiry has already been processed.');
     }
 
-    await _enquiries.doc(enquiryId).update({
+    final WriteBatch batch = _firestore.batch();
+
+    batch.update(enquiryRef, {
       'status': normalizedStatus,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    await batch.commit();
   }
 
   Stream<List<ProductEnquiry>> watchShopOwnerEnquiries() {

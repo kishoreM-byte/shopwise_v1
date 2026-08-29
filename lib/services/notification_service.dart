@@ -18,10 +18,9 @@ class NotificationService {
       return Stream.value(const <AppNotification>[]);
     }
 
-    return _notifications
-        .where('userId', isEqualTo: user.uid)
-        .snapshots()
-        .map((snapshot) {
+    return _notifications.where('userId', isEqualTo: user.uid).snapshots().map((
+      snapshot,
+    ) {
       final notifications = snapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id;
@@ -55,34 +54,6 @@ class NotificationService {
         .map((snapshot) => snapshot.docs.length);
   }
 
-  Future<String> createNotification({
-    required String userId,
-    required String type,
-    required String title,
-    required String message,
-    String? productId,
-    String? shopId,
-    String? enquiryId,
-  }) async {
-    final DocumentReference<Map<String, dynamic>> document =
-        _notifications.doc();
-
-    await document.set({
-      'id': document.id,
-      'userId': userId,
-      'type': type,
-      'title': title,
-      'message': message,
-      'productId': productId,
-      'shopId': shopId,
-      'enquiryId': enquiryId,
-      'isRead': false,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    return document.id;
-  }
-
   Future<void> markAsRead(String notificationId) async {
     final User? user = _auth.currentUser;
 
@@ -106,9 +77,7 @@ class NotificationService {
       return;
     }
 
-    await _notifications.doc(notificationId).update({
-      'isRead': true,
-    });
+    await _notifications.doc(notificationId).update({'isRead': true});
   }
 
   Future<void> markAllAsRead() async {

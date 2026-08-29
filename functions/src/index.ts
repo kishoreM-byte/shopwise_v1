@@ -1,6 +1,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
+import {FieldValue} from "firebase-admin/firestore";
 
 admin.initializeApp();
 
@@ -38,10 +39,13 @@ export const onEnquiryStatusChanged = onDocumentUpdated(
       return;
     }
 
+    const notificationId =
+      `${event.params.enquiryId}_${currentStatus}`;
+
     const notificationRef = admin
       .firestore()
       .collection("notifications")
-      .doc();
+      .doc(notificationId);
 
     const productName =
       typeof after.productName === "string" && after.productName.trim() ?
@@ -62,7 +66,7 @@ export const onEnquiryStatusChanged = onDocumentUpdated(
       shopId: after.shopId ?? null,
       enquiryId: event.params.enquiryId,
       isRead: false,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     console.log(

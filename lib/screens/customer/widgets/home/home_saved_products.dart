@@ -26,20 +26,14 @@ class HomeSavedProducts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (ids.isEmpty) {
-      return _emptyState(
-        icon: icon,
-        title: title,
-        subtitle: emptySubtitle,
-      );
+      return _emptyState(icon: icon, title: title, subtitle: emptySubtitle);
     }
 
     return StreamBuilder<List<Product>>(
-      stream: ProductService().watchAllProducts(),
+      stream: ProductService().watchProductsByIds(ids),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         final products = (snapshot.data ?? const <Product>[])
@@ -92,11 +86,7 @@ class HomeSavedProducts extends StatelessWidget {
                   color: ShopWiseColors.emerald.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  size: 34,
-                  color: ShopWiseColors.emerald,
-                ),
+                child: Icon(icon, size: 34, color: ShopWiseColors.emerald),
               ),
               const SizedBox(height: 18),
               Text(
@@ -142,9 +132,7 @@ class _SavedProductCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(ShopWiseRadius.large),
-        side: const BorderSide(
-          color: ShopWiseColors.border,
-        ),
+        side: const BorderSide(color: ShopWiseColors.border),
       ),
       child: InkWell(
         onTap: () {
@@ -164,9 +152,7 @@ class _SavedProductCard extends StatelessWidget {
                 height: 78,
                 decoration: BoxDecoration(
                   color: ShopWiseColors.surfaceSoft,
-                  borderRadius: BorderRadius.circular(
-                    ShopWiseRadius.small,
-                  ),
+                  borderRadius: BorderRadius.circular(ShopWiseRadius.small),
                 ),
                 child: product.imageUrls.isNotEmpty
                     ? ClipRRect(

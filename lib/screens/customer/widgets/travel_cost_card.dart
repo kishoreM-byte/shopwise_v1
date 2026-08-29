@@ -23,15 +23,11 @@ class TravelCostCard extends StatefulWidget {
 class _TravelCostCardState extends State<TravelCostCard> {
   VehicleType _vehicleType = VehicleType.car;
 
-  final TextEditingController _distanceController = TextEditingController(
-    text: '10',
-  );
+  final TextEditingController _distanceController = TextEditingController();
 
-  final TextEditingController _efficiencyController =
-      TextEditingController();
+  final TextEditingController _efficiencyController = TextEditingController();
 
-  final TextEditingController _energyPriceController =
-      TextEditingController();
+  final TextEditingController _energyPriceController = TextEditingController();
 
   final TextEditingController _tollController = TextEditingController(
     text: '0',
@@ -56,15 +52,12 @@ class _TravelCostCardState extends State<TravelCostCard> {
   }
 
   void _applyVehicleDefaults(VehicleType type) {
-    final VehicleProfile profile =
-        TravelCostService.vehicleProfiles.firstWhere(
+    final VehicleProfile profile = TravelCostService.vehicleProfiles.firstWhere(
       (profile) => profile.type == type,
     );
 
-    _efficiencyController.text =
-        profile.defaultEfficiency.toString();
-    _energyPriceController.text =
-        profile.defaultEnergyPrice.toString();
+    _efficiencyController.text = profile.defaultEfficiency.toString();
+    _energyPriceController.text = profile.defaultEnergyPrice.toString();
   }
 
   @override

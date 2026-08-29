@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-
+import '../../services/auth_service.dart';
 import '../../services/role_service.dart';
 import '../../theme/design_tokens.dart';
 import 'role_selection_screen.dart';
@@ -17,12 +16,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  final AuthService _authService = AuthService();
 
   bool _isLoading = false;
-  bool _googleInitialized = false;
 
   late final AnimationController _entranceController;
   late final Animation<double> _fadeAnimation;
@@ -43,27 +39,21 @@ class _LoginScreenState extends State<LoginScreen>
       curve: ShopWiseMotion.entranceCurve,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.045),
-      end: Offset.zero,
-    ).animate(
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.045), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: ShopWiseMotion.entranceCurve,
+          ),
+        );
+
+    _scaleAnimation = Tween<double>(begin: 0.96, end: 1).animate(
       CurvedAnimation(
         parent: _entranceController,
         curve: ShopWiseMotion.entranceCurve,
       ),
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.96,
-      end: 1,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: ShopWiseMotion.entranceCurve,
-      ),
-    );
-
-    _initializeGoogleSignIn();
     _entranceController.forward();
   }
 
@@ -71,18 +61,6 @@ class _LoginScreenState extends State<LoginScreen>
   void dispose() {
     _entranceController.dispose();
     super.dispose();
-  }
-
-  Future<void> _initializeGoogleSignIn() async {
-    try {
-      await _googleSignIn.initialize();
-
-      _googleInitialized = true;
-
-      debugPrint('ShopWise: Google Sign-In initialized successfully.');
-    } catch (e) {
-      debugPrint('ShopWise: Google Sign-In initialization failed: $e');
-    }
   }
 
   Future<void> _continueWithGoogle() async {
@@ -95,24 +73,18 @@ class _LoginScreenState extends State<LoginScreen>
     try {
       debugPrint('ShopWise: Starting Google Sign-In...');
 
-      if (!_googleInitialized) {
-        await _googleSignIn.initialize();
-        _googleInitialized = true;
+      final UserCredential? userCredential = await _authService
+          .signInWithGoogle();
+
+      if (userCredential == null) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google Sign-In was not completed.')),
+        );
+
+        return;
       }
-
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-
-      debugPrint('ShopWise: Google account selected: ${googleUser.email}');
-
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
 
       final User? user = userCredential.user;
 
@@ -120,29 +92,18 @@ class _LoginScreenState extends State<LoginScreen>
         throw Exception('Firebase returned no authenticated user.');
       }
 
-      debugPrint('ShopWise: Firebase authentication successful.');
-
-      debugPrint('ShopWise: UID: ${user.uid}');
+      debugPrint(
+        'ShopWise: Firebase authentication successful. '
+        'UID: ${user.uid}',
+      );
 
       await _handleUserRole(user);
-    } on GoogleSignInException catch (e) {
-      debugPrint('ShopWise: Google Sign-In Error');
-
-      debugPrint('Code: ${e.code}');
-
-      debugPrint('Description: ${e.description}');
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.description ?? 'Google Sign-In failed.')),
-      );
     } on FirebaseAuthException catch (e) {
-      debugPrint('ShopWise: Firebase Authentication Error');
-
-      debugPrint('Code: ${e.code}');
-
-      debugPrint('Message: ${e.message}');
+      debugPrint(
+        'ShopWise: Firebase Authentication Error\n'
+        'Code: ${e.code}\n'
+        'Message: ${e.message}',
+      );
 
       if (!mounted) return;
 
@@ -319,20 +280,13 @@ class _LoginScreenState extends State<LoginScreen>
 
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(
-                              22,
-                              24,
-                              22,
-                              22,
-                            ),
+                            padding: const EdgeInsets.fromLTRB(22, 24, 22, 22),
                             decoration: BoxDecoration(
                               color: ShopWiseColors.surface,
                               borderRadius: BorderRadius.circular(
                                 ShopWiseRadius.xLarge,
                               ),
-                              border: Border.all(
-                                color: ShopWiseColors.border,
-                              ),
+                              border: Border.all(color: ShopWiseColors.border),
                               boxShadow: [
                                 BoxShadow(
                                   color: ShopWiseColors.textPrimary.withValues(
@@ -348,10 +302,11 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Text(
                                   'Welcome back',
-                                  style: theme.textTheme.headlineLarge?.copyWith(
-                                    fontSize: 22,
-                                    letterSpacing: -0.5,
-                                  ),
+                                  style: theme.textTheme.headlineLarge
+                                      ?.copyWith(
+                                        fontSize: 22,
+                                        letterSpacing: -0.5,
+                                      ),
                                 ),
 
                                 const SizedBox(height: 6),
@@ -375,8 +330,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor:
                                           ShopWiseColors.textPrimary,
-                                      backgroundColor:
-                                          ShopWiseColors.surface,
+                                      backgroundColor: ShopWiseColors.surface,
                                       side: const BorderSide(
                                         color: ShopWiseColors.border,
                                       ),
@@ -394,8 +348,7 @@ class _LoginScreenState extends State<LoginScreen>
                                               key: ValueKey('loading'),
                                               width: 20,
                                               height: 20,
-                                              child:
-                                                  CircularProgressIndicator(
+                                              child: CircularProgressIndicator(
                                                 strokeWidth: 2.2,
                                               ),
                                             )
@@ -410,10 +363,10 @@ class _LoginScreenState extends State<LoginScreen>
                                                   alignment: Alignment.center,
                                                   decoration:
                                                       const BoxDecoration(
-                                                    color: ShopWiseColors
-                                                        .emeraldSoft,
-                                                    shape: BoxShape.circle,
-                                                  ),
+                                                        color: ShopWiseColors
+                                                            .emeraldSoft,
+                                                        shape: BoxShape.circle,
+                                                      ),
                                                   child: const Icon(
                                                     Icons.g_mobiledata_rounded,
                                                     color: ShopWiseColors
@@ -424,7 +377,8 @@ class _LoginScreenState extends State<LoginScreen>
                                                 const SizedBox(width: 10),
                                                 Text(
                                                   'Continue with Google',
-                                                  style: theme.textTheme
+                                                  style: theme
+                                                      .textTheme
                                                       .labelLarge
                                                       ?.copyWith(
                                                         color: ShopWiseColors
@@ -457,8 +411,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         'SECURE SIGN-IN',
                                         style: theme.textTheme.labelSmall
                                             ?.copyWith(
-                                              color:
-                                                  ShopWiseColors.textMuted,
+                                              color: ShopWiseColors.textMuted,
                                               fontSize: 9,
                                               letterSpacing: 1.1,
                                               fontWeight: FontWeight.w700,

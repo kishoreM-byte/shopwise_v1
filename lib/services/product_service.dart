@@ -81,6 +81,44 @@ class ProductService {
     });
   }
 
+  /// Watch only the products represented by the supplied document IDs.
+  ///
+  /// This avoids downloading the entire products collection for Wishlist
+  /// and Compare screens. Firestore `whereIn` supports up to 30 IDs,
+  /// which is comfortably above ShopWise's current Compare limit of 4.
+  Stream<List<Product>> watchProductsByIds(Set<String> productIds) {
+    final ids = productIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (ids.isEmpty) {
+      return Stream.value(const <Product>[]);
+    }
+
+    return _products.where(FieldPath.documentId, whereIn: ids).snapshots().map((
+      snapshot,
+    ) {
+      final products = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Product.fromMap(data);
+      }).toList();
+
+      final order = <String, int>{
+        for (var index = 0; index < ids.length; index++) ids[index]: index,
+      };
+
+      products.sort(
+        (a, b) =>
+            (order[a.id] ?? ids.length).compareTo(order[b.id] ?? ids.length),
+      );
+
+      return products;
+    });
+  }
+
   /// Get one product by its document ID.
   Future<Product?> getProduct(String productId) async {
     final DocumentSnapshot<Map<String, dynamic>> doc = await _products
@@ -94,7 +132,10 @@ class ProductService {
     return Product.fromMap(doc.data()!);
   }
 
-  /// Update an existing product.
+  /// Update an existing product owned by the current shop owner.
+  ///
+  /// Ownership fields are intentionally preserved from the existing document
+  /// rather than being rewritten from client-provided data.
   Future<void> updateProduct(Product product) async {
     final User? user = _auth.currentUser;
 
@@ -102,26 +143,47 @@ class ProductService {
       throw Exception('No authenticated user found.');
     }
 
-    final Shop? shop = await _shopService.getMyShop();
+    final String productId = product.id.trim();
 
-    if (shop == null) {
-      throw Exception('No shop found for this shop owner.');
+    if (productId.isEmpty) {
+      throw Exception('Product ID is required to update a product.');
     }
 
-    await _products
-        .doc(product.id)
-        .update(
-          product
-              .copyWith(
-                shopId: shop.id,
-                ownerId: user.uid,
-                updatedAt: DateTime.now(),
-              )
-              .toMap(),
-        );
+    final DocumentReference<Map<String, dynamic>> doc = _products.doc(
+      productId,
+    );
+
+    final DocumentSnapshot<Map<String, dynamic>> snapshot = await doc.get();
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      throw Exception('Product not found.');
+    }
+
+    final data = snapshot.data()!;
+
+    final String ownerId = data['ownerId'] as String? ?? '';
+
+    if (ownerId != user.uid) {
+      throw Exception('You are not allowed to update this product.');
+    }
+
+    final String shopId = data['shopId'] as String? ?? '';
+
+    if (shopId.isEmpty) {
+      throw Exception('Product is not linked to a shop.');
+    }
+
+    final updatedProduct = product.copyWith(
+      id: productId,
+      shopId: shopId,
+      ownerId: ownerId,
+      updatedAt: DateTime.now(),
+    );
+
+    await doc.update(updatedProduct.toMap());
   }
 
-  /// Delete a product.
+  /// Delete a product owned by the current shop owner.
   Future<void> deleteProduct(String productId) async {
     final User? user = _auth.currentUser;
 
@@ -129,6 +191,28 @@ class ProductService {
       throw Exception('No authenticated user found.');
     }
 
-    await _products.doc(productId).delete();
+    final String normalizedProductId = productId.trim();
+
+    if (normalizedProductId.isEmpty) {
+      throw Exception('Product ID is required to delete a product.');
+    }
+
+    final DocumentReference<Map<String, dynamic>> doc = _products.doc(
+      normalizedProductId,
+    );
+
+    final DocumentSnapshot<Map<String, dynamic>> snapshot = await doc.get();
+
+    if (!snapshot.exists || snapshot.data() == null) {
+      throw Exception('Product not found.');
+    }
+
+    final String ownerId = snapshot.data()!['ownerId'] as String? ?? '';
+
+    if (ownerId != user.uid) {
+      throw Exception('You are not allowed to delete this product.');
+    }
+
+    await doc.delete();
   }
 }
