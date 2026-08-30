@@ -70,20 +70,45 @@ class ReviewService {
 
     final existingReview = await reviewRef.get();
 
-    await reviewRef.set({
-      'id': user.uid,
-      'productId': trimmedProductId,
-      'userId': user.uid,
-      'userName': user.displayName?.trim().isNotEmpty == true
-          ? user.displayName!.trim()
-          : 'ShopWise User',
-      'rating': rating,
-      'comment': trimmedComment,
-      'createdAt':
-          existingReview.exists && existingReview.data()?['createdAt'] != null
-          ? existingReview.data()!['createdAt']
-          : FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+    final Map<String, dynamic> productData = productSnapshot.data() ?? {};
+    final int oldCount = (productData['reviewCount'] as num?)?.toInt() ?? 0;
+    final double oldAverage = (productData['rating'] as num?)?.toDouble() ?? 0;
+
+    final double oldRating = existingReview.exists
+        ? (existingReview.data()?['rating'] as num?)?.toDouble() ?? 0
+        : 0;
+
+    final int newCount = existingReview.exists ? oldCount : oldCount + 1;
+    final double totalRating = existingReview.exists
+        ? (oldAverage * oldCount) - oldRating + rating
+        : (oldAverage * oldCount) + rating;
+
+    final double newAverage = newCount == 0
+        ? 0
+        : (totalRating / newCount * 10).round() / 10;
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.set(reviewRef, {
+        'id': user.uid,
+        'productId': trimmedProductId,
+        'userId': user.uid,
+        'userName': user.displayName?.trim().isNotEmpty == true
+            ? user.displayName!.trim()
+            : 'ShopWise User',
+        'rating': rating,
+        'comment': trimmedComment,
+        'createdAt':
+            existingReview.exists && existingReview.data()?['createdAt'] != null
+            ? existingReview.data()!['createdAt']
+            : FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(productRef, {
+        'rating': newAverage,
+        'reviewCount': newCount,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
