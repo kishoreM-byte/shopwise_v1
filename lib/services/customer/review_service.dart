@@ -79,8 +79,8 @@ class ReviewService {
           : 'ShopWise User',
       'rating': rating,
       'comment': trimmedComment,
-      'createdAt': existingReview.exists &&
-              existingReview.data()?['createdAt'] != null
+      'createdAt':
+          existingReview.exists && existingReview.data()?['createdAt'] != null
           ? existingReview.data()!['createdAt']
           : FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -94,22 +94,44 @@ class ReviewService {
       throw Exception('Please sign in to manage your review.');
     }
 
-    final String trimmedProductId = productId.trim();
-
-    if (trimmedProductId.isEmpty) {
+    final String id = productId.trim();
+    if (id.isEmpty) {
       throw Exception('Invalid product.');
     }
 
-    final DocumentReference<Map<String, dynamic>> reviewRef =
-        _reviews(trimmedProductId).doc(user.uid);
+    final productRef = _product(id);
+    final reviewRef = _reviews(id).doc(user.uid);
 
-    final reviewSnapshot = await reviewRef.get();
+    await _firestore.runTransaction((transaction) async {
+      final productSnapshot = await transaction.get(productRef);
+      final reviewSnapshot = await transaction.get(reviewRef);
 
-    if (!reviewSnapshot.exists) {
-      return;
-    }
+      if (!reviewSnapshot.exists) return;
 
-    await reviewRef.delete();
+      if (!productSnapshot.exists || productSnapshot.data() == null) {
+        throw Exception('Product not found.');
+      }
+
+      final product = productSnapshot.data()!;
+      final review = reviewSnapshot.data()!;
+
+      final int oldCount = (product['reviewCount'] as num?)?.toInt() ?? 0;
+      final double oldAverage = (product['rating'] as num?)?.toDouble() ?? 0;
+      final double removedRating = (review['rating'] as num?)?.toDouble() ?? 0;
+
+      final int newCount = oldCount > 0 ? oldCount - 1 : 0;
+      final double newAverage = newCount == 0
+          ? 0
+          : ((oldAverage * oldCount - removedRating) / newCount * 10).round() /
+                10;
+
+      transaction.delete(reviewRef);
+      transaction.update(productRef, {
+        'rating': newAverage,
+        'reviewCount': newCount,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
   }
 
   Future<ProductReview?> getMyReview(String productId) async {
