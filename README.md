@@ -49,6 +49,25 @@ The platform estimates the actual purchasing expense by considering:
 
 It also considers travel expenses when customers visit a shop to confirm delivery arrangements.
 
+## 📱 Application Screenshots
+
+### Customer Home
+![ShopWise Customer Home](screenshots/customer-home.jpg)
+
+### Customer Product Details
+
+Product information, Smart Score, True Cost, nearby shop comparison, and travel, delivery and installation cost breakdown.
+
+![Product Details](screenshots/customer-product-details.jpg)
+
+![Smart Score and True Cost](screenshots/smart-score-true-cost.jpg)
+
+![Nearby Shop Cost Estimate](screenshots/nearby-shop-cost-estimate.jpg)
+
+![Travel, Delivery and Installation](screenshots/travel-delivery-installation.jpg)
+
+---
+
 ## 🛠️ Technology Stack
 
 | Technology | Purpose |
