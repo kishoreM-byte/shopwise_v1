@@ -4,31 +4,33 @@ class ShopWiseColors {
   ShopWiseColors._();
 
   // Core brand
-  static const Color emerald = Color(0xFF087F5B);
-  static const Color emeraldDeep = Color(0xFF056B4D);
-  static const Color emeraldSoft = Color(0xFFE3F5EF);
+  static const Color emerald = Color(0xFF454832);
+  static const Color emeraldDeep = Color(0xFF303321);
+  static const Color emeraldSoft = Color(0xFFE9E2D5);
+  static const Color olive = Color(0xFF666348);
+  static const Color oliveSoft = Color(0xFFF0E8DA);
 
   // Page identities
-  static const Color search = Color(0xFF2563EB);
-  static const Color compare = Color(0xFF635BDB);
-  static const Color wishlist = Color(0xFFE11D48);
-  static const Color enquiries = Color(0xFFD97706);
-  static const Color smart = Color(0xFF7C3AED);
-  static const Color trip = Color(0xFF2563EB);
+  static const Color search = Color(0xFF796348);
+  static const Color compare = Color(0xFF666348);
+  static const Color wishlist = Color(0xFF986B59);
+  static const Color enquiries = Color(0xFFAC824D);
+  static const Color smart = Color(0xFF796348);
+  static const Color trip = Color(0xFF74734F);
 
   // Surfaces
-  static const Color background = Color(0xFFF5F7F6);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceSoft = Color(0xFFF9FAFB);
-  static const Color border = Color(0xFFE1E7E4);
+  static const Color background = Color(0xFFF5F0E7);
+  static const Color surface = Color(0xFFFCF9F2);
+  static const Color surfaceSoft = Color(0xFFEDE4D6);
+  static const Color border = Color(0xFFE2D7C7);
 
   // Typography
-  static const Color textPrimary = Color(0xFF101817);
-  static const Color textSecondary = Color(0xFF4B5B56);
-  static const Color textMuted = Color(0xFF8B9994);
+  static const Color textPrimary = Color(0xFF302C24);
+  static const Color textSecondary = Color(0xFF5F594D);
+  static const Color textMuted = Color(0xFF716757);
 
   // Semantic
-  static const Color success = Color(0xFF16A34A);
+  static const Color success = Color(0xFF527653);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFDC2626);
 }

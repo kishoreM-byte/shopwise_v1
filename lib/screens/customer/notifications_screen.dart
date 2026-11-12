@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 
 import '../../models/notification.dart';
 import '../../services/notification_service.dart';
@@ -6,13 +7,12 @@ import '../../services/notification_service.dart';
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color textPrimary = ShopWiseColors.textPrimary;
+  static const Color textSecondary = ShopWiseColors.textSecondary;
+  static const Color background = ShopWiseColors.background;
 
-  static final NotificationService _notificationService =
-      NotificationService();
+  static final NotificationService _notificationService = NotificationService();
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +56,7 @@ class NotificationsScreen extends StatelessWidget {
                 },
                 child: const Text(
                   'Mark all read',
-                  style: TextStyle(
-                    color: primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: primary, fontWeight: FontWeight.w700),
                 ),
               );
             },
@@ -91,9 +88,7 @@ class NotificationsScreen extends StatelessWidget {
           return RefreshIndicator(
             color: primary,
             onRefresh: () async {
-              await Future<void>.delayed(
-                const Duration(milliseconds: 350),
-              );
+              await Future<void>.delayed(const Duration(milliseconds: 350));
             },
             child: ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -105,10 +100,7 @@ class NotificationsScreen extends StatelessWidget {
 
                 return _NotificationCard(
                   notification: notification,
-                  onTap: () => _markAsRead(
-                    context,
-                    notification,
-                  ),
+                  onTap: () => _markAsRead(context, notification),
                 );
               },
             ),
@@ -130,19 +122,14 @@ class NotificationsScreen extends StatelessWidget {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unable to update notification.'),
-        ),
+        const SnackBar(content: Text('Unable to update notification.')),
       );
     }
   }
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationCard({required this.notification, required this.onTap});
 
   final AppNotification notification;
   final VoidCallback onTap;
@@ -161,17 +148,17 @@ class _NotificationCard extends StatelessWidget {
           duration: const Duration(milliseconds: 220),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: unread ? Colors.white : const Color(0xFFFDFEFF),
+            color: unread ? ShopWiseColors.surface : ShopWiseColors.surface,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: unread
-                  ? const Color(0xFFBBF7D0)
-                  : const Color(0xFFE2E8F0),
+                  ? ShopWiseColors.emeraldSoft
+                  : ShopWiseColors.border,
             ),
             boxShadow: unread
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.06),
+                      color: ShopWiseColors.emerald.withValues(alpha: 0.06),
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -185,14 +172,10 @@ class _NotificationCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.10),
+                  color: ShopWiseColors.emerald.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF10B981),
-                  size: 23,
-                ),
+                child: Icon(icon, color: ShopWiseColors.emerald, size: 23),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -206,10 +189,11 @@ class _NotificationCard extends StatelessWidget {
                           child: Text(
                             notification.title,
                             style: TextStyle(
-                              color: const Color(0xFF0F172A),
+                              color: ShopWiseColors.textPrimary,
                               fontSize: 14,
-                              fontWeight:
-                                  unread ? FontWeight.w800 : FontWeight.w700,
+                              fontWeight: unread
+                                  ? FontWeight.w800
+                                  : FontWeight.w700,
                               height: 1.25,
                             ),
                           ),
@@ -221,7 +205,7 @@ class _NotificationCard extends StatelessWidget {
                             height: 8,
                             margin: const EdgeInsets.only(top: 4),
                             decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
+                              color: ShopWiseColors.emerald,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -232,7 +216,7 @@ class _NotificationCard extends StatelessWidget {
                     Text(
                       notification.message,
                       style: const TextStyle(
-                        color: Color(0xFF64748B),
+                        color: ShopWiseColors.textSecondary,
                         fontSize: 12.5,
                         height: 1.45,
                       ),
@@ -242,8 +226,8 @@ class _NotificationCard extends StatelessWidget {
                       _formatDate(notification.createdAt),
                       style: TextStyle(
                         color: unread
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFF94A3B8),
+                            ? ShopWiseColors.emerald
+                            : ShopWiseColors.textMuted,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -322,13 +306,13 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.notifications_none_rounded,
               size: 64,
-              color: Color(0xFFCBD5E1),
+              color: ShopWiseColors.border,
             ),
             SizedBox(height: 18),
             Text(
               'You’re all caught up',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -338,7 +322,7 @@ class _EmptyState extends StatelessWidget {
               'New offers, stock updates and important activity will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF64748B),
+                color: ShopWiseColors.textSecondary,
                 fontSize: 13,
                 height: 1.45,
               ),
@@ -358,7 +342,7 @@ class _LoadingState extends StatelessWidget {
     return const Center(
       child: CircularProgressIndicator(
         strokeWidth: 2.5,
-        color: Color(0xFF10B981),
+        color: ShopWiseColors.emerald,
       ),
     );
   }
@@ -380,13 +364,13 @@ class _ErrorState extends StatelessWidget {
             const Icon(
               Icons.cloud_off_rounded,
               size: 52,
-              color: Color(0xFFCBD5E1),
+              color: ShopWiseColors.border,
             ),
             const SizedBox(height: 16),
             const Text(
               'Couldn’t load notifications',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -396,7 +380,7 @@ class _ErrorState extends StatelessWidget {
               'Please check your connection and try again.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF64748B),
+                color: ShopWiseColors.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -406,7 +390,7 @@ class _ErrorState extends StatelessWidget {
               child: const Text(
                 'Try again',
                 style: TextStyle(
-                  color: Color(0xFF10B981),
+                  color: ShopWiseColors.emerald,
                   fontWeight: FontWeight.w700,
                 ),
               ),

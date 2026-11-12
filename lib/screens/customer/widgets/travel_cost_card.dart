@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../services/travel_cost_service.dart';
+import '../../../theme/design_tokens.dart';
 
 class TravelCostCard extends StatefulWidget {
   final double? routeDistanceKm;
   final bool isRouteDistanceLoading;
   final String? routeDistanceError;
-  final ValueChanged<double>? onCostChanged;
+  final ValueChanged<double?>? onCostChanged;
 
   const TravelCostCard({
     super.key,
@@ -73,9 +74,17 @@ class _TravelCostCardState extends State<TravelCostCard> {
   }
 
   void _applyRouteDistance() {
+    if (widget.isRouteDistanceLoading || widget.routeDistanceError != null) {
+      if (_usingRouteDistance) {
+        _distanceController.clear();
+      }
+      _usingRouteDistance = false;
+      return;
+    }
+
     final double? routeDistance = widget.routeDistanceKm;
 
-    if (routeDistance != null && routeDistance > 0) {
+    if (routeDistance != null && routeDistance.isFinite && routeDistance >= 0) {
       final String value = routeDistance.toStringAsFixed(2);
 
       if (_distanceController.text != value) {
@@ -86,6 +95,9 @@ class _TravelCostCardState extends State<TravelCostCard> {
       return;
     }
 
+    if (_usingRouteDistance) {
+      _distanceController.clear();
+    }
     _usingRouteDistance = false;
   }
 
@@ -99,9 +111,27 @@ class _TravelCostCardState extends State<TravelCostCard> {
   }
 
   void _calculateResult() {
-    final double distance =
-        widget.routeDistanceKm ??
-        (double.tryParse(_distanceController.text.trim()) ?? 0);
+    if (widget.isRouteDistanceLoading) {
+      setState(() => _result = null);
+      widget.onCostChanged?.call(null);
+      return;
+    }
+
+    final double? routeDistance = widget.routeDistanceError == null
+        ? widget.routeDistanceKm
+        : null;
+    final bool hasValidRouteDistance =
+        routeDistance != null && routeDistance.isFinite && routeDistance >= 0;
+
+    final double? distance = hasValidRouteDistance
+        ? routeDistance
+        : double.tryParse(_distanceController.text.trim());
+
+    if (distance == null || !distance.isFinite || distance < 0) {
+      setState(() => _result = null);
+      widget.onCostChanged?.call(null);
+      return;
+    }
 
     final double efficiency =
         double.tryParse(_efficiencyController.text.trim()) ?? 1;
@@ -160,9 +190,9 @@ class _TravelCostCardState extends State<TravelCostCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -174,18 +204,27 @@ class _TravelCostCardState extends State<TravelCostCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
-                Icons.directions_car_outlined,
-                color: Color(0xFF2563EB),
-                size: 21,
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: ShopWiseColors.oliveSoft,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: ShopWiseColors.border),
+                ),
+                child: const Icon(
+                  Icons.route_rounded,
+                  color: ShopWiseColors.olive,
+                  size: 22,
+                ),
               ),
-              SizedBox(width: 9),
+              const SizedBox(width: 12),
               Text(
                 'Travel Cost',
                 style: TextStyle(
-                  color: Color(0xFF0F172A),
+                  color: ShopWiseColors.textPrimary,
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                 ),
@@ -198,7 +237,7 @@ class _TravelCostCardState extends State<TravelCostCard> {
           const Text(
             'Estimate what travelling to the shop adds to your purchase.',
             style: TextStyle(
-              color: Color(0xFF64748B),
+              color: ShopWiseColors.textSecondary,
               fontSize: 11,
               height: 1.4,
             ),
@@ -308,6 +347,14 @@ class _TravelCostCardState extends State<TravelCostCard> {
             ),
           ],
 
+          if (result == null && !widget.isRouteDistanceLoading) ...[
+            const SizedBox(height: 12),
+            _buildRouteStatus(
+              icon: Icons.edit_road_outlined,
+              message: 'Enter a one-way distance to estimate travel cost.',
+            ),
+          ],
+
           if (result != null) ...[
             const SizedBox(height: 18),
             _buildResult(result),
@@ -322,20 +369,29 @@ class _TravelCostCardState extends State<TravelCostCard> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFBBF7D0)),
+        color: ShopWiseColors.oliveSoft,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF059669)),
-          const SizedBox(width: 9),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: ShopWiseColors.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 17, color: ShopWiseColors.olive),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: const TextStyle(
-                color: Color(0xFF166534),
+                color: ShopWiseColors.textSecondary,
                 fontSize: 11,
+                height: 1.4,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -374,7 +430,7 @@ class _TravelCostCardState extends State<TravelCostCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -408,7 +464,7 @@ class _TravelCostCardState extends State<TravelCostCard> {
           child: Text(
             label,
             style: TextStyle(
-              color: const Color(0xFF64748B),
+              color: ShopWiseColors.textSecondary,
               fontSize: 12,
               fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -417,7 +473,7 @@ class _TravelCostCardState extends State<TravelCostCard> {
         Text(
           value,
           style: TextStyle(
-            color: const Color(0xFF0F172A),
+            color: ShopWiseColors.textPrimary,
             fontSize: strong ? 16 : 12,
             fontWeight: FontWeight.w900,
           ),

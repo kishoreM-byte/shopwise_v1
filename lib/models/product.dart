@@ -46,6 +46,8 @@ class Product {
     this.updatedAt,
   });
 
+  bool get isAvailableForPurchase => isAvailable && stock > 0;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -80,7 +82,7 @@ class Product {
       originalPrice: (map['originalPrice'] as num?)?.toDouble(),
       stock: (map['stock'] as num?)?.toInt() ?? 0,
       isAvailable: map['isAvailable'] as bool? ?? true,
-      imageUrls: List<String>.from(map['imageUrls'] ?? const []),
+      imageUrls: _imageUrlsFromMap(map['imageUrls']),
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: (map['reviewCount'] as num?)?.toInt() ?? 0,
       hasOffer: map['hasOffer'] as bool? ?? false,
@@ -104,6 +106,28 @@ class Product {
     }
 
     return null;
+  }
+
+  /// Reads only usable remote image URLs. Older or partially written product
+  /// records may contain nulls, blanks, or non-string values; these should
+  /// leave the product usable and let the UI show its normal image fallback.
+  static List<String> _imageUrlsFromMap(dynamic value) {
+    if (value is! Iterable) {
+      return const <String>[];
+    }
+
+    return value
+        .whereType<String>()
+        .map((url) => url.trim())
+        .where((url) {
+          if (url.isEmpty) return false;
+
+          final Uri? uri = Uri.tryParse(url);
+          return uri != null &&
+              (uri.scheme == 'https' || uri.scheme == 'http') &&
+              uri.host.isNotEmpty;
+        })
+        .toList(growable: false);
   }
 
   Product copyWith({

@@ -6,6 +6,7 @@ import '../../../services/smart_score_service.dart';
 import '../../../services/delivery_cost_service.dart';
 import '../../../services/installation_cost_service.dart';
 import 'travel_cost_card.dart';
+import '../../../theme/design_tokens.dart';
 
 class SmartScoreCard extends StatefulWidget {
   final Product product;
@@ -29,15 +30,16 @@ class SmartScoreCard extends StatefulWidget {
 
 class _SmartScoreCardState extends State<SmartScoreCard> {
   double _travelCost = 0;
+  bool _hasTravelEstimate = false;
   double _deliveryCost = 0;
   double _installationCost = 0;
 
   DeliveryType _deliveryType = DeliveryType.selfPickup;
   InstallationType _installationType = InstallationType.notRequired;
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color dark = Color(0xFF0F172A);
-  static const Color secondary = Color(0xFF64748B);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color dark = ShopWiseColors.textPrimary;
+  static const Color secondary = ShopWiseColors.textSecondary;
 
   SmartScoreResult get _result {
     const SmartScoreService service = SmartScoreService();
@@ -67,7 +69,8 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
           routeDistanceError: widget.routeDistanceError,
           onCostChanged: (cost) {
             setState(() {
-              _travelCost = cost;
+              _hasTravelEstimate = cost != null;
+              _travelCost = cost ?? 0;
             });
           },
         ),
@@ -89,7 +92,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
     if (shop == null) {
       return _buildServiceUnavailableCard(
         icon: Icons.local_shipping_outlined,
-        iconColor: const Color(0xFF2563EB),
+        iconColor: ShopWiseColors.olive,
         title: 'Delivery',
         message: 'Shop delivery information is unavailable.',
       );
@@ -98,7 +101,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
     if (!shop.deliveryAvailable) {
       return _buildServiceUnavailableCard(
         icon: Icons.local_shipping_outlined,
-        iconColor: const Color(0xFF2563EB),
+        iconColor: ShopWiseColors.olive,
         title: 'Delivery',
         message: 'Delivery is not available from this shop.',
       );
@@ -108,9 +111,9 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +122,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
             children: [
               Icon(
                 Icons.local_shipping_outlined,
-                color: Color(0xFF2563EB),
+                color: ShopWiseColors.olive,
                 size: 21,
               ),
               SizedBox(width: 9),
@@ -140,14 +143,14 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
             initialValue: _deliveryType,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: ShopWiseColors.surfaceSoft,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -161,8 +164,16 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
               ),
               DropdownMenuItem(
                 value: DeliveryType.shopDelivery,
+                enabled:
+                    shop.deliveryChargeIsKnown &&
+                    shop.deliveryCharge.isFinite &&
+                    shop.deliveryCharge >= 0,
                 child: Text(
-                  'Shop delivery — ₹${shop.deliveryCharge.toStringAsFixed(0)}',
+                  shop.deliveryChargeIsKnown &&
+                          shop.deliveryCharge.isFinite &&
+                          shop.deliveryCharge >= 0
+                      ? 'Shop delivery — ₹${shop.deliveryCharge.toStringAsFixed(0)}'
+                      : 'Shop delivery — charge unknown',
                 ),
               ),
             ],
@@ -184,7 +195,11 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
           const SizedBox(height: 9),
 
           Text(
-            _deliveryCost > 0
+            !shop.deliveryChargeIsKnown ||
+                    !shop.deliveryCharge.isFinite ||
+                    shop.deliveryCharge < 0
+                ? 'Delivery charge not provided by the shop; delivery is excluded from this estimate.'
+                : _deliveryCost > 0
                 ? '₹${_deliveryCost.toStringAsFixed(0)} will be included in True Cost.'
                 : 'No delivery charge added.',
             style: const TextStyle(
@@ -208,9 +223,9 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Row(
         children: [
@@ -251,7 +266,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
     if (shop == null) {
       return _buildServiceUnavailableCard(
         icon: Icons.handyman_outlined,
-        iconColor: const Color(0xFF8B5CF6),
+        iconColor: ShopWiseColors.search,
         title: 'Installation',
         message: 'Shop installation information is unavailable.',
       );
@@ -260,7 +275,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
     if (!shop.installationAvailable) {
       return _buildServiceUnavailableCard(
         icon: Icons.handyman_outlined,
-        iconColor: const Color(0xFF8B5CF6),
+        iconColor: ShopWiseColors.search,
         title: 'Installation',
         message: 'Installation is not available from this shop.',
       );
@@ -270,16 +285,20 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.handyman_outlined, color: Color(0xFF8B5CF6), size: 21),
+              Icon(
+                Icons.handyman_outlined,
+                color: ShopWiseColors.search,
+                size: 21,
+              ),
               SizedBox(width: 9),
               Text(
                 'Installation',
@@ -298,14 +317,14 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
             initialValue: _installationType,
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: ShopWiseColors.surfaceSoft,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
@@ -319,8 +338,16 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
               ),
               DropdownMenuItem(
                 value: InstallationType.shopInstallation,
+                enabled:
+                    shop.installationChargeIsKnown &&
+                    shop.installationCharge.isFinite &&
+                    shop.installationCharge >= 0,
                 child: Text(
-                  'Shop installation — ₹${shop.installationCharge.toStringAsFixed(0)}',
+                  shop.installationChargeIsKnown &&
+                          shop.installationCharge.isFinite &&
+                          shop.installationCharge >= 0
+                      ? 'Shop installation — ₹${shop.installationCharge.toStringAsFixed(0)}'
+                      : 'Shop installation — charge unknown',
                 ),
               ),
             ],
@@ -342,7 +369,11 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
           const SizedBox(height: 9),
 
           Text(
-            _installationCost > 0
+            !shop.installationChargeIsKnown ||
+                    !shop.installationCharge.isFinite ||
+                    shop.installationCharge < 0
+                ? 'Installation charge not provided by the shop; installation is excluded from this estimate.'
+                : _installationCost > 0
                 ? '₹${_installationCost.toStringAsFixed(0)} will be included in True Cost.'
                 : 'No installation charge added.',
             style: const TextStyle(
@@ -361,9 +392,9 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -426,7 +457,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primary.withValues(alpha: 0.10), const Color(0xFFF0FDFA)],
+          colors: [primary.withValues(alpha: 0.10), ShopWiseColors.surface],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -444,7 +475,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
                   child: CircularProgressIndicator(
                     value: result.score / 100,
                     strokeWidth: 7,
-                    backgroundColor: Colors.white,
+                    backgroundColor: ShopWiseColors.surface,
                     color: primary,
                   ),
                 ),
@@ -533,7 +564,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
             child: LinearProgressIndicator(
               value: score / 100,
               minHeight: 7,
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: ShopWiseColors.border,
               color: primary,
             ),
           ),
@@ -552,13 +583,15 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
   }
 
   Widget _buildTrueCost(SmartScoreResult result) {
+    final bool hasCompleteInputs = _hasTravelEstimate && widget.shop != null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,7 +600,7 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
             children: [
               Icon(
                 Icons.calculate_outlined,
-                color: Color(0xFF2563EB),
+                color: ShopWiseColors.olive,
                 size: 21,
               ),
               SizedBox(width: 9),
@@ -590,27 +623,39 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
 
           const SizedBox(height: 9),
 
-          _buildCostRow('Travel', result.travelCost),
+          _buildCostRow(
+            'Travel',
+            result.travelCost,
+            unavailable: !_hasTravelEstimate,
+          ),
 
           const SizedBox(height: 9),
 
-          _buildCostRow('Delivery', result.deliveryCost),
+          _buildCostRow(
+            'Delivery',
+            result.deliveryCost,
+            unavailable: widget.shop == null,
+          ),
 
           const SizedBox(height: 9),
 
-          _buildCostRow('Installation', result.installationCost),
+          _buildCostRow(
+            'Installation',
+            result.installationCost,
+            unavailable: widget.shop == null,
+          ),
 
           const SizedBox(height: 13),
 
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const Divider(height: 1, color: ShopWiseColors.border),
 
           const SizedBox(height: 13),
 
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'You actually spend',
+                  hasCompleteInputs ? 'Estimated total' : 'Known subtotal',
                   style: TextStyle(
                     color: dark,
                     fontSize: 13,
@@ -618,19 +663,39 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
                   ),
                 ),
               ),
-              Text(
-                '₹${result.trueCost.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: dark,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.3,
+              if (hasCompleteInputs)
+                Text(
+                  '₹${result.trueCost.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    color: dark,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                )
+              else
+                const Text(
+                  'Incomplete',
+                  style: TextStyle(
+                    color: secondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
             ],
           ),
 
-          if (result.additionalCost > 0) ...[
+          if (!hasCompleteInputs) ...[
+            const SizedBox(height: 7),
+            const Text(
+              'Some costs are unavailable, so this is a subtotal.',
+              style: TextStyle(
+                color: secondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ] else if (result.additionalCost > 0) ...[
             const SizedBox(height: 7),
             Text(
               '₹${result.additionalCost.toStringAsFixed(0)} added to the product price',
@@ -656,7 +721,11 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
     );
   }
 
-  Widget _buildCostRow(String label, double amount) {
+  Widget _buildCostRow(
+    String label,
+    double amount, {
+    bool unavailable = false,
+  }) {
     final bool hasCost = amount > 0;
 
     return Row(
@@ -672,7 +741,11 @@ class _SmartScoreCardState extends State<SmartScoreCard> {
           ),
         ),
         Text(
-          hasCost ? '₹${amount.toStringAsFixed(0)}' : 'Not added',
+          unavailable
+              ? 'Estimate unavailable'
+              : hasCost
+              ? '₹${amount.toStringAsFixed(0)}'
+              : 'Not added',
           style: TextStyle(
             color: hasCost ? dark : secondary,
             fontSize: 12,

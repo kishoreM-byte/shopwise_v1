@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../../models/review.dart';
 import '../../../services/customer/review_service.dart';
+import '../../../theme/design_tokens.dart';
 
 class ProductReviews extends StatelessWidget {
   final String productId;
 
-  const ProductReviews({
-    super.key,
-    required this.productId,
-  });
+  const ProductReviews({super.key, required this.productId});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color dark = Color(0xFF0F172A);
-  static const Color secondary = Color(0xFF64748B);
-  static const Color border = Color(0xFFE2E8F0);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color dark = ShopWiseColors.textPrimary;
+  static const Color secondary = ShopWiseColors.textSecondary;
+  static const Color border = ShopWiseColors.border;
   static const Color star = Color(0xFFF59E0B);
 
   @override
@@ -62,12 +60,9 @@ class ProductReviews extends StatelessWidget {
 
   Widget _countBadge(int count) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -84,7 +79,7 @@ class ProductReviews extends StatelessWidget {
   Widget _summary(List<ProductReview> reviews) {
     final double average =
         reviews.fold<double>(0, (sum, review) => sum + review.rating) /
-            reviews.length;
+        reviews.length;
 
     final counts = List<int>.filled(5, 0);
 
@@ -97,7 +92,7 @@ class ProductReviews extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
       ),
@@ -167,11 +162,7 @@ class ProductReviews extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(
-                        Icons.star_rounded,
-                        color: star,
-                        size: 13,
-                      ),
+                      const Icon(Icons.star_rounded, color: star, size: 13),
                       const SizedBox(width: 7),
                       Expanded(
                         child: ClipRRect(
@@ -179,7 +170,7 @@ class ProductReviews extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: fraction,
                             minHeight: 6,
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            backgroundColor: ShopWiseColors.border,
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               star,
                             ),
@@ -215,7 +206,7 @@ class ProductReviews extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
       ),
@@ -229,10 +220,7 @@ class ProductReviews extends StatelessWidget {
               color: primary.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.rate_review_outlined,
-              color: primary,
-            ),
+            child: const Icon(Icons.rate_review_outlined, color: primary),
           ),
           const SizedBox(height: 12),
           const Text(
@@ -246,11 +234,7 @@ class ProductReviews extends StatelessWidget {
           const SizedBox(height: 4),
           const Text(
             'Be the first customer to share your experience.',
-            style: TextStyle(
-              color: secondary,
-              fontSize: 13,
-              height: 1.4,
-            ),
+            style: TextStyle(color: secondary, fontSize: 13, height: 1.4),
           ),
         ],
       ),
@@ -268,10 +252,7 @@ class ProductReviews extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFFD97706),
-          ),
+          Icon(Icons.info_outline_rounded, color: Color(0xFFD97706)),
           SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -289,8 +270,9 @@ class ProductReviews extends StatelessWidget {
   }
 
   Widget _reviewCard(ProductReview review) {
-    final String name =
-        review.userName.trim().isEmpty ? 'ShopWise User' : review.userName;
+    final String name = review.userName.trim().isEmpty
+        ? 'ShopWise User'
+        : review.userName;
 
     final String initial = name.substring(0, 1).toUpperCase();
 
@@ -298,7 +280,7 @@ class ProductReviews extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: border),
       ),
@@ -333,11 +315,7 @@ class ProductReviews extends StatelessWidget {
               ),
               Row(
                 children: [
-                  const Icon(
-                    Icons.star_rounded,
-                    color: star,
-                    size: 17,
-                  ),
+                  const Icon(Icons.star_rounded, color: star, size: 17),
                   const SizedBox(width: 3),
                   Text(
                     review.rating.toStringAsFixed(1),
@@ -367,7 +345,7 @@ class ProductReviews extends StatelessWidget {
             Text(
               _formatDate(review.createdAt!),
               style: const TextStyle(
-                color: Color(0xFF94A3B8),
+                color: ShopWiseColors.textMuted,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),

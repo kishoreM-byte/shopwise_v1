@@ -8,52 +8,72 @@ class HomeQuickActions extends StatelessWidget {
     required this.onCompare,
     required this.onWishlist,
     required this.onEnquiries,
+    required this.onOrders,
   });
 
   final VoidCallback onCompare;
   final VoidCallback onWishlist;
   final VoidCallback onEnquiries;
+  final VoidCallback onOrders;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.compare_arrows_rounded,
-            title: 'Compare',
-            subtitle: 'Compare saved products',
-            accent: ShopWiseColors.compare,
-            onTap: onCompare,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.favorite_rounded,
-            title: 'Wishlist',
-            subtitle: 'Your saved products',
-            accent: ShopWiseColors.wishlist,
-            onTap: onWishlist,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _ActionCard(
-            icon: Icons.email_rounded,
-            title: 'Enquiries',
-            subtitle: 'Track requests',
-            accent: ShopWiseColors.enquiries,
-            onTap: onEnquiries,
-          ),
-        ),
-      ],
+    final actions = <_QuickActionData>[
+      _QuickActionData(
+        icon: Icons.compare_arrows_rounded,
+        title: 'Compare',
+        subtitle: 'Compare saved products',
+        accent: ShopWiseColors.compare,
+        onTap: onCompare,
+      ),
+      _QuickActionData(
+        icon: Icons.favorite_rounded,
+        title: 'Wishlist',
+        subtitle: 'Your saved products',
+        accent: ShopWiseColors.wishlist,
+        onTap: onWishlist,
+      ),
+      _QuickActionData(
+        icon: Icons.email_rounded,
+        title: 'Enquiries',
+        subtitle: 'Track requests',
+        accent: ShopWiseColors.enquiries,
+        onTap: onEnquiries,
+      ),
+      _QuickActionData(
+        icon: Icons.shopping_bag_rounded,
+        title: 'Orders',
+        subtitle: 'Track your purchases',
+        accent: ShopWiseColors.emerald,
+        onTap: onOrders,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 600 ? 4 : 2;
+        final spacing = 12.0;
+        final cardWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final action in actions)
+              SizedBox(
+                width: cardWidth,
+                child: _ActionCard(action: action),
+              ),
+          ],
+        );
+      },
     );
   }
 }
 
-class _ActionCard extends StatelessWidget {
-  const _ActionCard({
+class _QuickActionData {
+  const _QuickActionData({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -66,40 +86,43 @@ class _ActionCard extends StatelessWidget {
   final String subtitle;
   final Color accent;
   final VoidCallback onTap;
+}
+
+class _ActionCard extends StatelessWidget {
+  const _ActionCard({required this.action});
+
+  final _QuickActionData action;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: ShopWiseColors.surface,
-      borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+      elevation: ShopWiseElevation.subtle / 2,
+      shadowColor: ShopWiseColors.textPrimary.withValues(alpha: 0.06),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+        side: const BorderSide(color: ShopWiseColors.border),
+      ),
       child: InkWell(
-        onTap: onTap,
+        onTap: action.onTap,
         borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(ShopWiseRadius.large),
-            border: Border.all(color: ShopWiseColors.border),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(13),
+                  color: action.accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(ShopWiseRadius.medium),
                 ),
-                child: Icon(
-                  icon,
-                  color: accent,
-                  size: 21,
-                ),
+                child: Icon(action.icon, color: action.accent, size: 20),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 11),
               Text(
-                title,
+                action.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -109,12 +132,13 @@ class _ActionCard extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                subtitle,
+                action.subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: ShopWiseColors.textMuted,
                   fontSize: 11,
+                  height: 1.35,
                 ),
               ),
             ],

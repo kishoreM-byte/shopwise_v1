@@ -59,11 +59,18 @@ class CloudinaryService {
     final data = jsonDecode(responseBody) as Map<String, dynamic>;
     final secureUrl = data['secure_url'];
 
-    if (secureUrl is! String || secureUrl.isEmpty) {
+    if (secureUrl is! String || !isValidSecureImageUrl(secureUrl)) {
       throw Exception('Cloudinary did not return a secure image URL.');
     }
 
-    return secureUrl;
+    return secureUrl.trim();
+  }
+
+  /// Cloudinary's `secure_url` must be an absolute HTTPS URL before it can be
+  /// persisted as a product image.
+  static bool isValidSecureImageUrl(String value) {
+    final Uri? uri = Uri.tryParse(value.trim());
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
   }
 
   static String normalizeFileName(String fileName) {

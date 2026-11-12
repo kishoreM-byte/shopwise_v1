@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../models/shop.dart';
 import '../../services/shop_service.dart';
+import '../../theme/design_tokens.dart';
 import 'widgets/shop_service_options_card.dart';
 
 class ShopSetupScreen extends StatefulWidget {
@@ -245,20 +246,20 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, color: const Color(0xFF64748B)),
+      prefixIcon: Icon(icon, color: ShopWiseColors.textSecondary),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: ShopWiseColors.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: ShopWiseColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderSide: const BorderSide(color: ShopWiseColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.5),
+        borderSide: const BorderSide(color: ShopWiseColors.olive, width: 1.5),
       ),
     );
   }
@@ -266,11 +267,11 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: ShopWiseColors.background,
         elevation: 0,
-        foregroundColor: const Color(0xFF0F172A),
+        foregroundColor: ShopWiseColors.textPrimary,
         title: Text(
           widget.isEditMode ? 'Edit Shop' : 'Shop Setup',
           style: const TextStyle(fontWeight: FontWeight.w800),
@@ -285,20 +286,22 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF10B981), Color(0xFF059669)],
-                ),
+                color: ShopWiseColors.surfaceSoft,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.storefront_rounded, color: Colors.white, size: 34),
+                  Icon(
+                    Icons.storefront_rounded,
+                    color: ShopWiseColors.textPrimary,
+                    size: 34,
+                  ),
                   SizedBox(height: 14),
                   Text(
                     'Set up your shop',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: ShopWiseColors.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                     ),
@@ -307,7 +310,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   Text(
                     'Add your shop details so customers can discover and trust your business.',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: ShopWiseColors.textSecondary,
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -321,7 +324,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             const Text(
               'Basic information',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -380,7 +383,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             const Text(
               'Contact details',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -405,21 +408,24 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ShopWiseColors.surface,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: ShopWiseColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.my_location_rounded, color: Color(0xFF10B981)),
+                      Icon(
+                        Icons.my_location_rounded,
+                        color: ShopWiseColors.olive,
+                      ),
                       SizedBox(width: 10),
                       Text(
                         'Shop location',
                         style: TextStyle(
-                          color: Color(0xFF0F172A),
+                          color: ShopWiseColors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                         ),
@@ -432,7 +438,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                         ? 'Location captured successfully'
                         : 'Use your current location to help customers find your shop.',
                     style: const TextStyle(
-                      color: Color(0xFF64748B),
+                      color: ShopWiseColors.textSecondary,
                       fontSize: 12,
                       height: 1.4,
                     ),
@@ -443,7 +449,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                       'Lat: ${_latitude!.toStringAsFixed(6)}  •  '
                       'Lng: ${_longitude!.toStringAsFixed(6)}',
                       style: const TextStyle(
-                        color: Color(0xFF334155),
+                        color: ShopWiseColors.textSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -458,9 +464,12 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFFECFDF5), Color(0xFFEFF6FF)],
+                        colors: [
+                          ShopWiseColors.surfaceSoft,
+                          ShopWiseColors.oliveSoft,
+                        ],
                       ),
-                      border: Border.all(color: const Color(0xFFD1FAE5)),
+                      border: Border.all(color: ShopWiseColors.border),
                     ),
                     child: Stack(
                       children: [
@@ -470,7 +479,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                           child: Icon(
                             Icons.map_rounded,
                             size: 38,
-                            color: Color(0xFF10B981),
+                            color: ShopWiseColors.olive,
                           ),
                         ),
                         Positioned(
@@ -484,7 +493,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: ShopWiseColors.textPrimary,
                             ),
                           ),
                         ),
@@ -503,7 +512,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                               style: const TextStyle(
                                 fontSize: 11,
                                 height: 1.3,
-                                color: Color(0xFF64748B),
+                                color: ShopWiseColors.textSecondary,
                               ),
                             ),
                           ),
@@ -537,8 +546,10 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                                   : 'Use Current Location',
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF059669),
-                              side: const BorderSide(color: Color(0xFF10B981)),
+                              foregroundColor: ShopWiseColors.emeraldDeep,
+                              side: const BorderSide(
+                                color: ShopWiseColors.olive,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -601,9 +612,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ShopWiseColors.surface,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: ShopWiseColors.border),
               ),
               child: SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -612,7 +623,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    color: ShopWiseColors.textPrimary,
                   ),
                 ),
                 subtitle: Text(
@@ -621,11 +632,11 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                       : 'Your shop will appear closed',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFF64748B),
+                    color: ShopWiseColors.textSecondary,
                   ),
                 ),
                 value: _isOpen,
-                activeThumbColor: const Color(0xFF10B981),
+                activeThumbColor: ShopWiseColors.olive,
                 onChanged: (value) {
                   setState(() {
                     _isOpen = value;
@@ -642,7 +653,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
               child: FilledButton.icon(
                 onPressed: _isSaving ? null : _saveShop,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
+                  backgroundColor: ShopWiseColors.olive,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(17),
                   ),

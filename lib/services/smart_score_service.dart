@@ -52,6 +52,10 @@ class SmartScoreResult {
 
     return 'Consider comparing price, quality and additional buying costs.';
   }
+
+  String get componentSummary =>
+      'Value ${valueScore.round()} · Quality ${qualityScore.round()} · '
+      'Availability ${availabilityScore.round()} · Offers ${offerScore.round()}';
 }
 
 class SmartScoreService {
@@ -88,11 +92,7 @@ class SmartScoreService {
       costResult.additionalCost,
     );
 
-    final double finalScore = _clamp(
-      baseScore - costImpact,
-      0,
-      100,
-    );
+    final double finalScore = _clamp(baseScore - costImpact, 0, 100);
 
     return SmartScoreResult(
       score: finalScore,
@@ -137,17 +137,11 @@ class SmartScoreService {
       return 50;
     }
 
-    final double ratingScore =
-        _clamp((product.rating / 5) * 80, 0, 80);
+    final double ratingScore = _clamp((product.rating / 5) * 80, 0, 80);
 
-    final double reviewConfidence =
-        _reviewConfidence(product.reviewCount);
+    final double reviewConfidence = _reviewConfidence(product.reviewCount);
 
-    return _clamp(
-      ratingScore + reviewConfidence,
-      0,
-      100,
-    );
+    return _clamp(ratingScore + reviewConfidence, 0, 100);
   }
 
   double _reviewConfidence(int reviewCount) {
@@ -183,18 +177,14 @@ class SmartScoreService {
       return 40;
     }
 
-    if (product.offerText == null ||
-        product.offerText!.trim().isEmpty) {
+    if (product.offerText == null || product.offerText!.trim().isEmpty) {
       return 55;
     }
 
     return 100;
   }
 
-  double _calculateCostImpact(
-    double productPrice,
-    double additionalCost,
-  ) {
+  double _calculateCostImpact(double productPrice, double additionalCost) {
     if (productPrice <= 0 || additionalCost <= 0) {
       return 0;
     }
@@ -202,18 +192,10 @@ class SmartScoreService {
     final double additionalCostPercentage =
         (additionalCost / productPrice) * 100;
 
-    return _clamp(
-      additionalCostPercentage * 0.35,
-      0,
-      20,
-    );
+    return _clamp(additionalCostPercentage * 0.35, 0, 20);
   }
 
-  double _clamp(
-    double value,
-    double minimum,
-    double maximum,
-  ) {
+  double _clamp(double value, double minimum, double maximum) {
     if (value < minimum) return minimum;
     if (value > maximum) return maximum;
     return value;

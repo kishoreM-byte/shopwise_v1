@@ -2,10 +2,32 @@ import 'package:flutter/material.dart';
 
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../../theme/design_tokens.dart';
 import 'product_details_screen.dart';
+import 'widgets/home/home_empty_state.dart';
 
-class BestDealsScreen extends StatelessWidget {
-  const BestDealsScreen({super.key});
+class BestDealsScreen extends StatefulWidget {
+  const BestDealsScreen({super.key, this.watchProducts});
+
+  final Stream<List<Product>> Function()? watchProducts;
+
+  @override
+  State<BestDealsScreen> createState() => _BestDealsScreenState();
+}
+
+class _BestDealsScreenState extends State<BestDealsScreen> {
+  late Stream<List<Product>> _products;
+
+  @override
+  void initState() {
+    super.initState();
+    _products = _watchProducts();
+  }
+
+  Stream<List<Product>> _watchProducts() =>
+      widget.watchProducts?.call() ?? ProductService().watchAllProducts();
+
+  void _retry() => setState(() => _products = _watchProducts());
 
   double _discount(Product product) {
     final original = product.originalPrice;
@@ -16,34 +38,42 @@ class BestDealsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Best Deals',
-          style: TextStyle(fontWeight: FontWeight.w800),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: ShopWiseColors.background,
       ),
       body: StreamBuilder<List<Product>>(
-        stream: ProductService().watchAllProducts(),
+        stream: _products,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+          if (snapshot.hasError) {
+            return _RetryState(
+              title: 'Deals are unavailable',
+              message: 'Check your connection and try again.',
+              onRetry: _retry,
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(color: ShopWiseColors.emerald),
+            );
           }
 
           final products =
               (snapshot.data ?? const <Product>[])
-                  .where((p) => p.isAvailable && p.hasOffer)
+                  .where((product) => product.isAvailable && product.hasOffer)
                   .toList()
                 ..sort((a, b) => _discount(b).compareTo(_discount(a)));
 
           if (products.isEmpty) {
-            return const Center(
-              child: Text(
-                'No active deals available right now.',
-                style: TextStyle(color: Color(0xFF64748B)),
-              ),
+            return const HomeEmptyState(
+              icon: Icons.local_offer_outlined,
+              title: 'No active deals',
+              subtitle: 'Check back soon for offers from nearby shops.',
             );
           }
 
@@ -54,52 +84,30 @@ class BestDealsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final product = products[index];
               final discount = _discount(product);
-
               return Card(
+                color: ShopWiseColors.surface,
                 elevation: 0,
-                color: Colors.white,
-                clipBehavior: Clip.antiAlias,
+                margin: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderRadius: BorderRadius.circular(ShopWiseRadius.medium),
+                  side: const BorderSide(color: ShopWiseColors.border),
                 ),
+                clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProductDetailsScreen(product: product),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailsScreen(product: product),
+                    ),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
                     child: Row(
                       children: [
-                        Container(
-                          width: 82,
-                          height: 82,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: product.imageUrls.isEmpty
-                              ? const Icon(
-                                  Icons.inventory_2_outlined,
-                                  color: Color(0xFF10B981),
-                                  size: 30,
-                                )
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.network(
-                                    product.imageUrls.first,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => const Icon(
-                                      Icons.inventory_2_outlined,
-                                      color: Color(0xFF10B981),
-                                    ),
-                                  ),
-                                ),
+                        _DealImage(
+                          url: product.imageUrls.isEmpty
+                              ? null
+                              : product.imageUrls.first,
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -109,20 +117,27 @@ class BestDealsScreen extends StatelessWidget {
                               if (discount > 0)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 9,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFDCFCE7),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: ShopWiseColors.oliveSoft,
+                                    border: Border.all(
+                                      color: ShopWiseColors.border,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      ShopWiseRadius.small,
+                                    ),
                                   ),
                                   child: Text(
                                     '${discount.toStringAsFixed(0)}% OFF',
-                                    style: const TextStyle(
-                                      color: Color(0xFF15803D),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: ShopWiseColors.search,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
                                 ),
                               const SizedBox(height: 7),
@@ -130,41 +145,45 @@ class BestDealsScreen extends StatelessWidget {
                                 product.name,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: 6),
-                              Row(
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 2,
                                 children: [
                                   Text(
                                     '₹${product.price.toStringAsFixed(0)}',
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFF10B981),
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          color: ShopWiseColors.emeraldDeep,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
-                                  if (product.originalPrice != null) ...[
-                                    const SizedBox(width: 8),
+                                  if (product.originalPrice != null &&
+                                      product.originalPrice! > product.price)
                                     Text(
                                       '₹${product.originalPrice!.toStringAsFixed(0)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF94A3B8),
-                                        decoration: TextDecoration.lineThrough,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                          ),
                                     ),
-                                  ],
                                 ],
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 6),
                         const Icon(
                           Icons.chevron_right_rounded,
-                          color: Color(0xFF94A3B8),
+                          color: ShopWiseColors.textMuted,
                         ),
                       ],
                     ),
@@ -174,6 +193,103 @@ class BestDealsScreen extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _DealImage extends StatelessWidget {
+  const _DealImage({required this.url});
+
+  final String? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = url?.trim() ?? '';
+    return Container(
+      width: 82,
+      height: 82,
+      decoration: BoxDecoration(
+        color: ShopWiseColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(ShopWiseRadius.medium),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: imageUrl.isEmpty
+          ? const _DealImageFallback()
+          : Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, progress) => progress == null
+                  ? child
+                  : const _DealImageFallback(loading: true),
+              errorBuilder: (_, _, _) => const _DealImageFallback(),
+            ),
+    );
+  }
+}
+
+class _DealImageFallback extends StatelessWidget {
+  const _DealImageFallback({this.loading = false});
+
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: loading
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: ShopWiseColors.emerald,
+              ),
+            )
+          : const Icon(
+              Icons.chair_outlined,
+              color: ShopWiseColors.emerald,
+              size: 30,
+            ),
+    );
+  }
+}
+
+class _RetryState extends StatelessWidget {
+  const _RetryState({
+    required this.title,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_outlined,
+              size: 42,
+              color: ShopWiseColors.emerald,
+            ),
+            const SizedBox(height: 14),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+          ],
+        ),
       ),
     );
   }

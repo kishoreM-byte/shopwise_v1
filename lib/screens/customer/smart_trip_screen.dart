@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 
 import '../../models/product.dart';
 import '../../services/product_service.dart';
@@ -10,7 +11,7 @@ class SmartTripScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
         title: const Text(
           'Smart Trip',
@@ -37,19 +38,23 @@ class SmartTripScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                    colors: [ShopWiseColors.emeraldDeep, ShopWiseColors.olive],
                   ),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.route_rounded, color: Colors.white, size: 30),
+                    Icon(
+                      Icons.route_rounded,
+                      color: ShopWiseColors.surface,
+                      size: 30,
+                    ),
                     SizedBox(height: 14),
                     Text(
                       'Buy smarter. Travel smarter.',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: ShopWiseColors.surface,
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                       ),
@@ -58,7 +63,7 @@ class SmartTripScreen extends StatelessWidget {
                     Text(
                       'Open a product to calculate the real driving route and travel cost to its shop.',
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: ShopWiseColors.textSecondary,
                         fontSize: 13,
                         height: 1.45,
                       ),
@@ -78,7 +83,7 @@ class SmartTripScreen extends StatelessWidget {
                   child: Center(
                     child: Text(
                       'No products available for trip planning.',
-                      style: TextStyle(color: Color(0xFF64748B)),
+                      style: TextStyle(color: ShopWiseColors.textSecondary),
                     ),
                   ),
                 )
@@ -97,10 +102,10 @@ class SmartTripScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
-      color: Colors.white,
+      color: ShopWiseColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: const BorderSide(color: ShopWiseColors.border),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -108,11 +113,14 @@ class SmartTripScreen extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            color: ShopWiseColors.oliveSoft,
             borderRadius: BorderRadius.circular(14),
           ),
           child: product.imageUrls.isEmpty
-              ? const Icon(Icons.inventory_2_outlined, color: Color(0xFF2563EB))
+              ? const Icon(
+                  Icons.inventory_2_outlined,
+                  color: ShopWiseColors.olive,
+                )
               : ClipRRect(
                   borderRadius: BorderRadius.circular(14),
                   child: Image.network(
@@ -120,7 +128,7 @@ class SmartTripScreen extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => const Icon(
                       Icons.inventory_2_outlined,
-                      color: Color(0xFF2563EB),
+                      color: ShopWiseColors.olive,
                     ),
                   ),
                 ),
@@ -133,12 +141,15 @@ class SmartTripScreen extends StatelessWidget {
         ),
         subtitle: Text(
           '₹${product.price.toStringAsFixed(0)}  •  View route & travel cost',
-          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          style: const TextStyle(
+            fontSize: 12,
+            color: ShopWiseColors.textSecondary,
+          ),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios_rounded,
           size: 16,
-          color: Color(0xFF2563EB),
+          color: ShopWiseColors.olive,
         ),
         onTap: () {
           Navigator.push(

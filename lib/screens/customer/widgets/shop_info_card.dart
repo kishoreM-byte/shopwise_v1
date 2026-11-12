@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/design_tokens.dart';
 
 import '../../../models/shop.dart';
 
@@ -14,9 +15,9 @@ class ShopInfoCard extends StatelessWidget {
     this.errorMessage,
   });
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color dark = Color(0xFF0F172A);
-  static const Color secondary = Color(0xFF64748B);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color dark = ShopWiseColors.textPrimary;
+  static const Color secondary = ShopWiseColors.textSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +39,9 @@ class ShopInfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: ShopWiseColors.surface,
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+        border: Border.all(color: ShopWiseColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -169,7 +170,7 @@ class ShopInfoCard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.verified_rounded,
-                  color: Color(0xFF059669),
+                  color: ShopWiseColors.emeraldDeep,
                   size: 17,
                 ),
                 SizedBox(width: 8),
@@ -177,7 +178,7 @@ class ShopInfoCard extends StatelessWidget {
                   child: Text(
                     'Sold by this local shop',
                     style: TextStyle(
-                      color: Color(0xFF047857),
+                      color: ShopWiseColors.emeraldDeep,
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
@@ -196,9 +197,9 @@ class ShopInfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +219,7 @@ class ShopInfoCard extends StatelessWidget {
               icon: Icons.local_shipping_outlined,
               title: 'Delivery available',
               charge: shop.deliveryCharge,
-              iconColor: const Color(0xFF2563EB),
+              iconColor: ShopWiseColors.olive,
             ),
 
           if (shop.deliveryAvailable && shop.installationAvailable)
@@ -229,7 +230,7 @@ class ShopInfoCard extends StatelessWidget {
               icon: Icons.handyman_outlined,
               title: 'Installation available',
               charge: shop.installationCharge,
-              iconColor: const Color(0xFF8B5CF6),
+              iconColor: ShopWiseColors.search,
             ),
         ],
       ),
@@ -271,7 +272,7 @@ class ShopInfoCard extends StatelessWidget {
         Text(
           chargeText,
           style: const TextStyle(
-            color: Color(0xFF059669),
+            color: ShopWiseColors.emeraldDeep,
             fontSize: 12,
             fontWeight: FontWeight.w800,
           ),
@@ -311,13 +312,15 @@ class ShopInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: isOpen ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+        color: isOpen
+            ? ShopWiseColors.success.withValues(alpha: 0.10)
+            : ShopWiseColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         isOpen ? 'OPEN' : 'CLOSED',
         style: TextStyle(
-          color: isOpen ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+          color: isOpen ? ShopWiseColors.success : ShopWiseColors.error,
           fontSize: 9,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
@@ -336,7 +339,7 @@ class ShopInfoCard extends StatelessWidget {
           child: Text(
             text,
             style: const TextStyle(
-              color: Color(0xFF475569),
+              color: secondary,
               fontSize: 12,
               height: 1.4,
               fontWeight: FontWeight.w500,
@@ -352,9 +355,9 @@ class ShopInfoCard extends StatelessWidget {
       width: double.infinity,
       height: 150,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: const Center(
         child: SizedBox(
@@ -371,9 +374,9 @@ class ShopInfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Row(
         children: [
@@ -381,7 +384,7 @@ class ShopInfoCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: ShopWiseColors.surfaceSoft,
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(

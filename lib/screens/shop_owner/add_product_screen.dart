@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
 import '../../services/image_upload_service.dart';
+import '../../theme/design_tokens.dart';
 
 class AddProductScreen extends StatefulWidget {
   final Product? product;
@@ -40,6 +41,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   bool _hasOffer = false;
   bool _isSaving = false;
   bool _isUploadingImages = false;
+  bool _hasImageUploadFailure = false;
   final List<String> _imageUrls = [];
 
   final List<String> _categories = const [
@@ -132,12 +134,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (files.length > remaining) {
         _showImageMessage('You can add up to 6 product images.');
       }
-    } catch (e) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
-      _showImageMessage('Image upload failed: $e');
+      _hasImageUploadFailure = true;
+      _showImageMessage(
+        'Image upload failed. Check your connection and try again. No failed image was added.',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -175,12 +180,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
       setState(() {
         _imageUrls.add(url);
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) {
         return;
       }
 
-      _showImageMessage('Image upload failed: $e');
+      _hasImageUploadFailure = true;
+      _showImageMessage(
+        'Image upload failed. Check your connection and try again. No failed image was added.',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -213,7 +221,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      backgroundColor: Colors.white,
+      backgroundColor: ShopWiseColors.surface,
       builder: (context) {
         return SafeArea(
           child: Padding(
@@ -226,7 +234,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   child: Text(
                     'Add product images',
                     style: TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: ShopWiseColors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
@@ -237,16 +245,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Choose clear photos that help customers understand the product.',
-                    style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                    style: TextStyle(
+                      color: ShopWiseColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),
                 ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFECFDF5),
+                    backgroundColor: ShopWiseColors.oliveSoft,
                     child: Icon(
                       Icons.photo_library_outlined,
-                      color: Color(0xFF059669),
+                      color: ShopWiseColors.olive,
                     ),
                   ),
                   title: const Text(
@@ -260,10 +271,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 ),
                 ListTile(
                   leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFEFF6FF),
+                    backgroundColor: ShopWiseColors.oliveSoft,
                     child: Icon(
                       Icons.camera_alt_outlined,
-                      color: Color(0xFF2563EB),
+                      color: ShopWiseColors.olive,
                     ),
                   ),
                   title: const Text(
@@ -295,9 +306,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ShopWiseColors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: ShopWiseColors.border),
           ),
           child: _imageUrls.isEmpty
               ? GestureDetector(
@@ -306,9 +317,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     height: 170,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: ShopWiseColors.background,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFD1D5DB)),
+                      border: Border.all(color: ShopWiseColors.border),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -319,13 +330,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 height: 34,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 3,
-                                  color: Color(0xFF10B981),
+                                  color: ShopWiseColors.olive,
                                 ),
                               )
                             : const Icon(
                                 Icons.add_photo_alternate_outlined,
                                 size: 42,
-                                color: Color(0xFF10B981),
+                                color: ShopWiseColors.olive,
                               ),
                         const SizedBox(height: 10),
                         Text(
@@ -333,7 +344,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                               ? 'Uploading image...'
                               : 'Add product photos',
                           style: const TextStyle(
-                            color: Color(0xFF0F172A),
+                            color: ShopWiseColors.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
                           ),
@@ -342,7 +353,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         const Text(
                           'Gallery or camera',
                           style: TextStyle(
-                            color: Color(0xFF64748B),
+                            color: ShopWiseColors.textMuted,
                             fontSize: 12,
                           ),
                         ),
@@ -368,14 +379,35 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   width: 118,
                                   height: 118,
                                   fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+
+                                    return const SizedBox(
+                                      width: 118,
+                                      height: 118,
+                                      child: ColoredBox(
+                                        color: ShopWiseColors.surfaceSoft,
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: ShopWiseColors.olive,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   errorBuilder: (_, _, _) {
                                     return Container(
                                       width: 118,
                                       height: 118,
-                                      color: const Color(0xFFF1F5F9),
+                                      color: ShopWiseColors.surfaceSoft,
                                       child: const Icon(
                                         Icons.broken_image_outlined,
-                                        color: Color(0xFF94A3B8),
+                                        color: ShopWiseColors.textMuted,
                                       ),
                                     );
                                   },
@@ -391,13 +423,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.black87,
+                                      color: ShopWiseColors.textPrimary
+                                          .withValues(alpha: 0.88),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Text(
                                       'MAIN',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: ShopWiseColors.surface,
                                         fontSize: 9,
                                         fontWeight: FontWeight.w800,
                                       ),
@@ -412,13 +445,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   child: Container(
                                     width: 28,
                                     height: 28,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black87,
+                                    decoration: BoxDecoration(
+                                      color: ShopWiseColors.textPrimary
+                                          .withValues(alpha: 0.88),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
                                       Icons.close_rounded,
-                                      color: Colors.white,
+                                      color: ShopWiseColors.surface,
                                       size: 17,
                                     ),
                                   ),
@@ -449,8 +483,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           _isUploadingImages ? 'Uploading...' : 'Add more',
                         ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF059669),
-                          side: const BorderSide(color: Color(0xFF10B981)),
+                          foregroundColor: ShopWiseColors.olive,
+                          side: const BorderSide(color: ShopWiseColors.olive),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -465,6 +499,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   Future<void> _saveProduct() async {
+    if (_isUploadingImages) {
+      _showImageMessage(
+        'Please wait for image uploads to finish before saving.',
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -516,15 +557,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
         return;
       }
 
+      final String message = _hasImageUploadFailure
+          ? widget.isEditMode
+                ? 'Product updated, but an image upload failed. Add the missing image again.'
+                : 'Product added, but an image upload failed. Add the missing image by editing this product.'
+          : widget.isEditMode
+          ? 'Product updated successfully'
+          : 'Product added successfully';
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.isEditMode
-                ? 'Product updated successfully'
-                : 'Product added successfully',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
 
       Navigator.pop(context, true);
@@ -557,10 +599,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     final bool editMode = widget.isEditMode;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
-        foregroundColor: const Color(0xFF0F172A),
+        backgroundColor: ShopWiseColors.background,
+        foregroundColor: ShopWiseColors.textPrimary,
         elevation: 0,
         title: Text(
           editMode ? 'Edit Product' : 'Add Product',
@@ -679,6 +721,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           return 'Enter valid price';
                         }
 
+                        final double? sellingPrice = double.tryParse(
+                          _priceController.text.trim(),
+                        );
+
+                        if (sellingPrice != null &&
+                            originalPrice <= sellingPrice) {
+                          return 'Original price must exceed selling price';
+                        }
+
                         return null;
                       },
                     ),
@@ -725,11 +776,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveProduct,
+                  onPressed: _isSaving || _isUploadingImages
+                      ? null
+                      : _saveProduct,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF94A3B8),
+                    backgroundColor: ShopWiseColors.olive,
+                    foregroundColor: ShopWiseColors.surface,
+                    disabledBackgroundColor: ShopWiseColors.textMuted,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(17),
@@ -741,7 +794,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           height: 22,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            color: Colors.white,
+                            color: ShopWiseColors.surface,
                           ),
                         )
                       : Row(
@@ -774,16 +827,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF10B981), Color(0xFF059669)],
-        ),
+        color: ShopWiseColors.surfaceSoft,
+        border: Border.all(color: ShopWiseColors.border),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         children: [
           Icon(
             editMode ? Icons.edit_note_rounded : Icons.add_business_rounded,
-            color: Colors.white,
+            color: ShopWiseColors.olive,
             size: 34,
           ),
           const SizedBox(width: 14),
@@ -794,7 +846,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 Text(
                   editMode ? 'Update your product' : 'Create a product',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: ShopWiseColors.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                   ),
@@ -805,7 +857,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       ? 'Keep your product information accurate and up to date.'
                       : 'Add accurate information so customers can make better decisions.',
                   style: const TextStyle(
-                    color: Colors.white70,
+                    color: ShopWiseColors.textSecondary,
                     fontSize: 12,
                     height: 1.4,
                   ),
@@ -825,7 +877,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         Text(
           title,
           style: const TextStyle(
-            color: Color(0xFF0F172A),
+            color: ShopWiseColors.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
@@ -833,7 +885,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+          style: const TextStyle(
+            color: ShopWiseColors.textSecondary,
+            fontSize: 12,
+          ),
         ),
       ],
     );
@@ -854,15 +909,15 @@ class _AddProductScreenState extends State<AddProductScreen> {
       maxLines: maxLines,
       validator: validator,
       style: const TextStyle(
-        color: Color(0xFF0F172A),
+        color: ShopWiseColors.textPrimary,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 21),
+        prefixIcon: Icon(icon, color: ShopWiseColors.textMuted, size: 21),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: ShopWiseColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
@@ -873,11 +928,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: ShopWiseColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.5),
+          borderSide: const BorderSide(color: ShopWiseColors.olive, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -898,17 +953,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
         labelText: 'Category',
         prefixIcon: const Icon(
           Icons.category_outlined,
-          color: Color(0xFF64748B),
+          color: ShopWiseColors.textMuted,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: ShopWiseColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: ShopWiseColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: ShopWiseColors.border),
         ),
       ),
       items: _categories
@@ -935,13 +990,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Row(
         children: [
-          const Icon(Icons.visibility_outlined, color: Color(0xFF64748B)),
+          const Icon(
+            Icons.visibility_outlined,
+            color: ShopWiseColors.textMuted,
+          ),
           const SizedBox(width: 12),
           const Expanded(
             child: Column(
@@ -954,14 +1012,17 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 SizedBox(height: 3),
                 Text(
                   'Customers can see this product.',
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 11),
+                  style: TextStyle(
+                    color: ShopWiseColors.textMuted,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),
           ),
           Switch(
             value: _isAvailable,
-            activeThumbColor: const Color(0xFF10B981),
+            activeThumbColor: ShopWiseColors.olive,
             onChanged: (bool value) {
               setState(() {
                 _isAvailable = value;
@@ -977,15 +1038,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.local_offer_outlined, color: Color(0xFFF59E0B)),
+              const Icon(
+                Icons.local_offer_outlined,
+                color: ShopWiseColors.warning,
+              ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
@@ -995,7 +1059,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
               Switch(
                 value: _hasOffer,
-                activeThumbColor: const Color(0xFF10B981),
+                activeThumbColor: ShopWiseColors.olive,
                 onChanged: (bool value) {
                   setState(() {
                     _hasOffer = value;

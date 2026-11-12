@@ -37,10 +37,7 @@ void main() {
       firestore = FakeFirebaseFirestore();
       user = _FakeUser('test-user');
       auth = _FakeFirebaseAuth(user);
-      service = WishlistService(
-        firestore: firestore,
-        auth: auth,
-      );
+      service = WishlistService(firestore: firestore, auth: auth);
     });
 
     test('starts with no saved products', () async {
@@ -74,6 +71,47 @@ void main() {
       expect(await service.isSaved('product-1'), isFalse);
     });
 
+    test('stores one product-keyed wishlist document', () async {
+      await service.toggle(' product-1 ');
+      final records = await firestore
+          .collection('users')
+          .doc('test-user')
+          .collection('wishlist')
+          .get();
+
+      expect(records.docs.map((doc) => doc.id), <String>['product-1']);
+      expect(records.docs.single.data()['productId'], 'product-1');
+    });
+
+    test(
+      'remove is idempotent and does not create an unsaved record',
+      () async {
+        await service.remove('missing-product');
+        expect(await service.isSaved('missing-product'), isFalse);
+
+        await service.toggle('product-1');
+        await service.remove('product-1');
+        await service.remove('product-1');
+        expect(await service.isSaved('product-1'), isFalse);
+      },
+    );
+
+    test('wishlist records are isolated by signed-in user', () async {
+      await service.toggle('product-1');
+      final otherUserService = WishlistService(
+        firestore: firestore,
+        auth: _FakeFirebaseAuth(_FakeUser('other-user')),
+      );
+
+      expect(await otherUserService.isSaved('product-1'), isFalse);
+      expect(await service.isSaved('product-1'), isTrue);
+    });
+
+    test('rejects blank product IDs without creating records', () async {
+      expect(() => service.toggle('  '), throwsArgumentError);
+      expect(await service.isSaved('  '), isFalse);
+    });
+
     test('watchWishlistIds emits saved product IDs', () async {
       final stream = service.watchWishlistIds();
 
@@ -82,9 +120,7 @@ void main() {
       await service.toggle('product-1');
       await service.toggle('product-2');
 
-      final ids = await stream.firstWhere(
-        (value) => value.length == 2,
-      );
+      final ids = await stream.firstWhere((value) => value.length == 2);
 
       expect(ids, containsAll(<String>['product-1', 'product-2']));
     });
@@ -93,10 +129,7 @@ void main() {
   test('throws when toggling while signed out', () async {
     final firestore = FakeFirebaseFirestore();
     final auth = _FakeFirebaseAuth(null);
-    final service = WishlistService(
-      firestore: firestore,
-      auth: auth,
-    );
+    final service = WishlistService(firestore: firestore, auth: auth);
 
     expect(
       () => service.toggle('product-1'),

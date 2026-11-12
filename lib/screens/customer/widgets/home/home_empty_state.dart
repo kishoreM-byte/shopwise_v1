@@ -28,27 +28,16 @@ class HomeEmptyState extends StatelessWidget {
               color: ShopWiseColors.emerald.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 34,
-              color: ShopWiseColors.emerald,
-            ),
+            child: Icon(icon, size: 34, color: ShopWiseColors.emerald),
           ),
           const SizedBox(height: 18),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: ShopWiseColors.textSecondary,
-              height: 1.4,
             ),
           ),
         ],

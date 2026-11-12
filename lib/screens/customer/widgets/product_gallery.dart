@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import '../../../theme/design_tokens.dart';
 
 class ProductGallery extends StatefulWidget {
   final List<String> imageUrls;
@@ -14,29 +17,54 @@ class _ProductGalleryState extends State<ProductGallery> {
   int _currentIndex = 0;
 
   @override
+  void didUpdateWidget(covariant ProductGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(
+      _usableImageUrlsFor(oldWidget.imageUrls),
+      _usableImageUrls,
+    )) {
+      _currentIndex = 0;
+      if (_pageController.hasClients) _pageController.jumpToPage(0);
+    }
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
+  List<String> get _usableImageUrls => _usableImageUrlsFor(widget.imageUrls);
+
+  List<String> _usableImageUrlsFor(List<String> urls) => urls
+      .map((url) => url.trim())
+      .where((url) {
+        final Uri? uri = Uri.tryParse(url);
+        return uri != null &&
+            url.isNotEmpty &&
+            (uri.scheme == 'https' || uri.scheme == 'http') &&
+            uri.host.isNotEmpty;
+      })
+      .toList(growable: false);
+
   @override
   Widget build(BuildContext context) {
-    final images = widget.imageUrls
-        .where((url) => url.trim().isNotEmpty)
-        .toList();
+    final double galleryHeight = (MediaQuery.sizeOf(context).width * 0.82)
+        .clamp(250.0, 410.0);
+    final images = _usableImageUrls;
 
     if (images.isEmpty) {
-      return _buildPlaceholder();
+      return _buildPlaceholder(galleryHeight);
     }
 
     return Column(
       children: [
         Container(
-          height: 330,
+          height: galleryHeight,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(28),
+            color: ShopWiseColors.surfaceSoft,
+            borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
@@ -54,7 +82,7 @@ class _ProductGalleryState extends State<ProductGallery> {
                     images[index],
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) {
-                      return _buildPlaceholder();
+                      return _buildPlaceholder(galleryHeight);
                     },
                     loadingBuilder: (context, child, progress) {
                       if (progress == null) return child;
@@ -62,7 +90,7 @@ class _ProductGalleryState extends State<ProductGallery> {
                       return const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Color(0xFF10B981),
+                          color: ShopWiseColors.emerald,
                         ),
                       );
                     },
@@ -126,8 +154,8 @@ class _ProductGalleryState extends State<ProductGallery> {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: selected
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFFE2E8F0),
+                            ? ShopWiseColors.emerald
+                            : ShopWiseColors.border,
                         width: selected ? 2 : 1,
                       ),
                     ),
@@ -136,10 +164,32 @@ class _ProductGalleryState extends State<ProductGallery> {
                       child: Image.network(
                         images[index],
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+
+                          return const ColoredBox(
+                            color: ShopWiseColors.surfaceSoft,
+                            child: Center(
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: ShopWiseColors.emerald,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                         errorBuilder: (_, _, _) {
-                          return const Icon(
-                            Icons.image_outlined,
-                            color: Color(0xFF94A3B8),
+                          return Container(
+                            color: ShopWiseColors.surfaceSoft,
+                            child: const Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: ShopWiseColors.textMuted,
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -154,19 +204,19 @@ class _ProductGalleryState extends State<ProductGallery> {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(double height) {
     return Container(
       width: double.infinity,
-      height: 330,
+      height: height,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(28),
+        color: ShopWiseColors.surfaceSoft,
+        borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
       ),
       child: const Center(
         child: Icon(
           Icons.inventory_2_outlined,
           size: 64,
-          color: Color(0xFF94A3B8),
+          color: ShopWiseColors.textMuted,
         ),
       ),
     );

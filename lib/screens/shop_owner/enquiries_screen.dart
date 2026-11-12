@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 
 import '../../models/enquiry.dart';
 import '../../services/customer/enquiry_service.dart';
@@ -6,11 +7,11 @@ import '../../services/customer/enquiry_service.dart';
 class EnquiriesScreen extends StatelessWidget {
   const EnquiriesScreen({super.key});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color background = Color(0xFFF8FAFC);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color border = Color(0xFFE2E8F0);
+  static const Color primary = ShopWiseColors.olive;
+  static const Color background = ShopWiseColors.background;
+  static const Color textPrimary = ShopWiseColors.textPrimary;
+  static const Color textSecondary = ShopWiseColors.textSecondary;
+  static const Color border = ShopWiseColors.border;
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +23,7 @@ class EnquiriesScreen extends StatelessWidget {
         foregroundColor: textPrimary,
         title: const Text(
           'Customer Enquiries',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
         ),
       ),
       body: StreamBuilder<List<ProductEnquiry>>(
@@ -47,15 +45,12 @@ class EnquiriesScreen extends StatelessWidget {
             return _buildEmpty();
           }
 
-          final pending =
-              enquiries.where((e) => e.status == 'pending').length;
+          final pending = enquiries.where((e) => e.status == 'pending').length;
 
           return RefreshIndicator(
             color: primary,
             onRefresh: () async {
-              await Future<void>.delayed(
-                const Duration(milliseconds: 350),
-              );
+              await Future<void>.delayed(const Duration(milliseconds: 350));
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -84,10 +79,7 @@ class EnquiriesScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-          ],
+          colors: [ShopWiseColors.surfaceSoft, ShopWiseColors.oliveSoft],
         ),
         borderRadius: BorderRadius.circular(24),
       ),
@@ -103,7 +95,7 @@ class EnquiriesScreen extends StatelessWidget {
           Container(
             width: 1,
             height: 42,
-            color: Colors.white.withValues(alpha: 0.12),
+            color: ShopWiseColors.olive.withValues(alpha: 0.18),
           ),
           Expanded(
             child: _stat(
@@ -124,12 +116,12 @@ class EnquiriesScreen extends StatelessWidget {
   }) {
     return Column(
       children: [
-        Icon(icon, color: const Color(0xFF34D399), size: 20),
+        Icon(icon, color: ShopWiseColors.search, size: 20),
         const SizedBox(height: 7),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: ShopWiseColors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.w900,
           ),
@@ -138,7 +130,7 @@ class EnquiriesScreen extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF94A3B8),
+            color: ShopWiseColors.textMuted,
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
@@ -147,14 +139,11 @@ class EnquiriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEnquiryCard(
-    BuildContext context,
-    ProductEnquiry enquiry,
-  ) {
+  Widget _buildEnquiryCard(BuildContext context, ProductEnquiry enquiry) {
     final isPending = enquiry.status.toLowerCase() == 'pending';
 
     return Material(
-      color: Colors.white,
+      color: ShopWiseColors.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -179,7 +168,7 @@ class EnquiriesScreen extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.person_rounded,
-                      color: Color(0xFF059669),
+                      color: ShopWiseColors.success,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -224,7 +213,7 @@ class EnquiriesScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: ShopWiseColors.background,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -251,7 +240,7 @@ class EnquiriesScreen extends StatelessWidget {
                     Text(
                       '×${enquiry.quantity}',
                       style: const TextStyle(
-                        color: Color(0xFF059669),
+                        color: ShopWiseColors.success,
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
@@ -315,22 +304,17 @@ class EnquiriesScreen extends StatelessWidget {
 
   Widget _statusBadge(String status, bool pending) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: pending
-            ? const Color(0xFFFFF7ED)
+            ? ShopWiseColors.surfaceSoft
             : primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         status.toUpperCase(),
         style: TextStyle(
-          color: pending
-              ? const Color(0xFFC2410C)
-              : const Color(0xFF047857),
+          color: pending ? ShopWiseColors.search : ShopWiseColors.olive,
           fontSize: 9,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.4,
@@ -339,10 +323,7 @@ class EnquiriesScreen extends StatelessWidget {
     );
   }
 
-  void _showDetails(
-    BuildContext context,
-    ProductEnquiry enquiry,
-  ) {
+  void _showDetails(BuildContext context, ProductEnquiry enquiry) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -351,10 +332,8 @@ class EnquiriesScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(28),
-            ),
+            color: ShopWiseColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SafeArea(
             child: Column(
@@ -366,7 +345,7 @@ class EnquiriesScreen extends StatelessWidget {
                     width: 38,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: ShopWiseColors.border,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -430,10 +409,8 @@ class EnquiriesScreen extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFB91C1C),
-                            side: const BorderSide(
-                              color: Color(0xFFFECACA),
-                            ),
+                            foregroundColor: ShopWiseColors.wishlist,
+                            side: const BorderSide(color: Color(0xFFFECACA)),
                             minimumSize: const Size.fromHeight(50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
@@ -441,17 +418,11 @@ class EnquiriesScreen extends StatelessWidget {
                           ),
                           onPressed: () async {
                             Navigator.pop(context);
-                            await _changeStatus(
-                              context,
-                              enquiry,
-                              'rejected',
-                            );
+                            await _changeStatus(context, enquiry, 'rejected');
                           },
                           child: const Text(
                             'Reject',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
@@ -467,17 +438,11 @@ class EnquiriesScreen extends StatelessWidget {
                           ),
                           onPressed: () async {
                             Navigator.pop(context);
-                            await _changeStatus(
-                              context,
-                              enquiry,
-                              'accepted',
-                            );
+                            await _changeStatus(context, enquiry, 'accepted');
                           },
                           child: const Text(
                             'Accept',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
@@ -497,9 +462,7 @@ class EnquiriesScreen extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       child: const Text(
                         'Close',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
                   ),
@@ -517,19 +480,14 @@ class EnquiriesScreen extends StatelessWidget {
     String status,
   ) async {
     try {
-      await EnquiryService().updateEnquiryStatus(
-        enquiry.id,
-        status,
-      );
+      await EnquiryService().updateEnquiryStatus(enquiry.id, status);
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            status == 'accepted'
-                ? 'Enquiry accepted.'
-                : 'Enquiry rejected.',
+            status == 'accepted' ? 'Enquiry accepted.' : 'Enquiry rejected.',
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -539,20 +497,14 @@ class EnquiriesScreen extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
-          ),
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  Widget _detailRow(
-    IconData icon,
-    String label,
-    String value,
-  ) {
+  Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -619,11 +571,7 @@ class EnquiriesScreen extends StatelessWidget {
             const Text(
               'Customer enquiries about your products will appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: textSecondary,
-                fontSize: 12,
-                height: 1.5,
-              ),
+              style: TextStyle(color: textSecondary, fontSize: 12, height: 1.5),
             ),
           ],
         ),
@@ -638,10 +586,7 @@ class EnquiriesScreen extends StatelessWidget {
         child: Text(
           'Unable to load enquiries.\n$error',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: textSecondary,
-            fontSize: 13,
-          ),
+          style: const TextStyle(color: textSecondary, fontSize: 13),
         ),
       ),
     );

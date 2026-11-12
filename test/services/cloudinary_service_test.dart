@@ -31,6 +31,32 @@ void main() {
     });
   });
 
+  group('CloudinaryService secure image URLs', () {
+    test('accepts an absolute HTTPS URL with a host', () {
+      expect(
+        CloudinaryService.isValidSecureImageUrl(
+          ' https://res.cloudinary.com/shopwise/image/upload/item.jpg ',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects empty, hostless, non-HTTPS, and malformed values', () {
+      expect(CloudinaryService.isValidSecureImageUrl(''), isFalse);
+      expect(
+        CloudinaryService.isValidSecureImageUrl('https:///image.jpg'),
+        isFalse,
+      );
+      expect(
+        CloudinaryService.isValidSecureImageUrl(
+          'http://images.example/item.jpg',
+        ),
+        isFalse,
+      );
+      expect(CloudinaryService.isValidSecureImageUrl('not a URL'), isFalse);
+    });
+  });
+
   group('ImageUploadService limits', () {
     test('product image limit is six', () {
       expect(ImageUploadService.maxProductImages, 6);

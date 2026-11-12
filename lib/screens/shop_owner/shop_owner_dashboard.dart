@@ -1,22 +1,61 @@
 import 'package:flutter/material.dart';
 
+import '../../models/shop.dart';
 import '../../services/shop_service.dart';
+import '../../theme/design_tokens.dart';
 import '../profile/profile_screen.dart';
 import 'add_product_screen.dart';
 import 'products_screen.dart';
 import 'shop_setup_screen.dart';
 import 'shop_analytics_screen.dart';
 import 'enquiries_screen.dart';
+import 'orders_screen.dart';
 
-class ShopOwnerDashboard extends StatelessWidget {
-  const ShopOwnerDashboard({super.key});
+class ShopOwnerDashboard extends StatefulWidget {
+  const ShopOwnerDashboard({super.key, this.loadShop});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color primaryDark = Color(0xFF047857);
-  static const Color background = Color(0xFFF6F8FA);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color border = Color(0xFFE5E7EB);
+  final Future<Shop?> Function()? loadShop;
+
+  @override
+  State<ShopOwnerDashboard> createState() => _ShopOwnerDashboardState();
+}
+
+class _ShopOwnerDashboardState extends State<ShopOwnerDashboard> {
+  static const Color primaryDark = ShopWiseColors.emeraldDeep;
+  static const Color background = ShopWiseColors.background;
+  static const Color textPrimary = ShopWiseColors.textPrimary;
+  static const Color textSecondary = ShopWiseColors.textSecondary;
+  static const Color border = ShopWiseColors.border;
+
+  late Future<Shop?> _shopFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _shopFuture = _loadShop();
+  }
+
+  Future<Shop?> _loadShop() {
+    return widget.loadShop?.call() ?? ShopService().getMyShop();
+  }
+
+  void _retryShopLoad() {
+    setState(() {
+      _shopFuture = _loadShop();
+    });
+  }
+
+  Future<void> _openShopSetup(BuildContext context, {Shop? shop}) async {
+    final Shop? currentShop = shop ?? await ShopService().getMyShop();
+    if (!context.mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ShopSetupScreen(shop: currentShop)),
+    );
+
+    if (mounted) _retryShopLoad();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +87,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                   _buildManagementCard(
                     context,
                     icon: Icons.inventory_2_rounded,
+                    accent: ShopWiseColors.olive,
                     title: 'Manage Products',
                     subtitle: 'View, edit and manage your products',
                     onTap: () {
@@ -63,25 +103,16 @@ class ShopOwnerDashboard extends StatelessWidget {
                   _buildManagementCard(
                     context,
                     icon: Icons.storefront_rounded,
+                    accent: ShopWiseColors.enquiries,
                     title: 'Shop Setup',
                     subtitle: 'Update your shop information',
-                    onTap: () async {
-                      final shop = await ShopService().getMyShop();
-
-                      if (!context.mounted) return;
-
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ShopSetupScreen(shop: shop),
-                        ),
-                      );
-                    },
+                    onTap: () => _openShopSetup(context),
                   ),
                   const SizedBox(height: 12),
                   _buildManagementCard(
                     context,
                     icon: Icons.analytics_rounded,
+                    accent: ShopWiseColors.search,
                     title: 'Analytics',
                     subtitle: 'Track your shop performance',
                     onTap: () {
@@ -96,7 +127,24 @@ class ShopOwnerDashboard extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildManagementCard(
                     context,
+                    icon: Icons.shopping_bag_rounded,
+                    accent: ShopWiseColors.emerald,
+                    title: 'Orders',
+                    subtitle: 'Review and manage customer orders',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ShopOwnerOrdersScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildManagementCard(
+                    context,
                     icon: Icons.mark_email_unread_rounded,
+                    accent: ShopWiseColors.wishlist,
                     title: 'Customer Enquiries',
                     subtitle: 'View customer product enquiries',
                     onTap: () {
@@ -149,32 +197,30 @@ class ShopOwnerDashboard extends StatelessWidget {
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-            child: Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+          Tooltip(
+            message: 'Profile',
+            child: Material(
+              color: ShopWiseColors.surface,
+              elevation: ShopWiseElevation.subtle / 2,
+              shadowColor: textPrimary.withValues(alpha: 0.06),
+              shape: const CircleBorder(side: BorderSide(color: border)),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
+                child: const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: primaryDark,
+                    size: 22,
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: primaryDark,
-                size: 22,
+                ),
               ),
             ),
           ),
@@ -185,10 +231,14 @@ class ShopOwnerDashboard extends StatelessWidget {
 
   Widget _buildShopCard(BuildContext context) {
     return FutureBuilder(
-      future: ShopService().getMyShop(),
+      future: _shopFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingShopCard();
+        }
+
+        if (snapshot.hasError) {
+          return _buildShopErrorCard();
         }
 
         final shop = snapshot.data;
@@ -200,17 +250,13 @@ class ShopOwnerDashboard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF10B981), Color(0xFF047857)],
-            ),
+            color: ShopWiseColors.surfaceSoft,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: primary.withValues(alpha: 0.20),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: ShopWiseColors.textPrimary.withValues(alpha: 0.06),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -223,12 +269,12 @@ class ShopOwnerDashboard extends StatelessWidget {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
+                      color: ShopWiseColors.oliveSoft,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(
                       Icons.storefront_rounded,
-                      color: Colors.white,
+                      color: ShopWiseColors.textPrimary,
                       size: 26,
                     ),
                   ),
@@ -239,7 +285,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.14),
+                      color: ShopWiseColors.surface.withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -248,7 +294,9 @@ class ShopOwnerDashboard extends StatelessWidget {
                           width: 7,
                           height: 7,
                           decoration: BoxDecoration(
-                            color: shop.isOpen ? Colors.white : Colors.white54,
+                            color: shop.isOpen
+                                ? ShopWiseColors.olive
+                                : ShopWiseColors.textMuted,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -256,7 +304,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                         Text(
                           shop.isOpen ? 'Open' : 'Closed',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: ShopWiseColors.textPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -272,7 +320,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: ShopWiseColors.textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.4,
@@ -282,13 +330,13 @@ class ShopOwnerDashboard extends StatelessWidget {
               Text(
                 shop.category,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: ShopWiseColors.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 18),
-              Container(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+              Container(height: 1, color: ShopWiseColors.border),
               const SizedBox(height: 15),
               Row(
                 children: [
@@ -306,14 +354,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                   const Spacer(),
                   InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ShopSetupScreen(shop: shop),
-                        ),
-                      );
-                    },
+                    onTap: () => _openShopSetup(context, shop: shop),
                     child: const Padding(
                       padding: EdgeInsets.all(6),
                       child: Row(
@@ -321,7 +362,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                           Text(
                             'Edit',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: ShopWiseColors.textPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -329,7 +370,7 @@ class ShopOwnerDashboard extends StatelessWidget {
                           SizedBox(width: 3),
                           Icon(
                             Icons.arrow_forward_rounded,
-                            color: Colors.white,
+                            color: ShopWiseColors.textPrimary,
                             size: 15,
                           ),
                         ],
@@ -348,7 +389,7 @@ class ShopOwnerDashboard extends StatelessWidget {
   Widget _buildShopStat(IconData icon, String value, String label) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white, size: 18),
+        Icon(icon, color: ShopWiseColors.textPrimary, size: 18),
         const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,14 +397,17 @@ class ShopOwnerDashboard extends StatelessWidget {
             Text(
               value,
               style: const TextStyle(
-                color: Colors.white,
+                color: ShopWiseColors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
               ),
             ),
             Text(
               label,
-              style: const TextStyle(color: Colors.white60, fontSize: 9),
+              style: const TextStyle(
+                color: ShopWiseColors.textSecondary,
+                fontSize: 10,
+              ),
             ),
           ],
         ),
@@ -375,13 +419,17 @@ class ShopOwnerDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: border),
       ),
       child: Column(
         children: [
-          const Icon(Icons.storefront_outlined, color: primary, size: 42),
+          const Icon(
+            Icons.storefront_outlined,
+            color: ShopWiseColors.olive,
+            size: 42,
+          ),
           const SizedBox(height: 12),
           const Text(
             'Set up your shop',
@@ -408,8 +456,8 @@ class ShopOwnerDashboard extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.white,
+                backgroundColor: ShopWiseColors.olive,
+                foregroundColor: ShopWiseColors.surface,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -431,12 +479,57 @@ class ShopOwnerDashboard extends StatelessWidget {
     return Container(
       height: 190,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: border),
       ),
       child: const Center(
-        child: CircularProgressIndicator(color: primary, strokeWidth: 2.5),
+        child: CircularProgressIndicator(
+          color: ShopWiseColors.olive,
+          strokeWidth: 2.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShopErrorCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ShopWiseColors.surface,
+        borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
+        border: Border.all(color: border),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.cloud_off_rounded,
+            color: ShopWiseColors.olive,
+            size: 34,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Shop details unavailable',
+            style: TextStyle(
+              color: textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Check your connection and try again.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: _retryShopLoad,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Try again'),
+          ),
+        ],
       ),
     );
   }
@@ -470,6 +563,7 @@ class ShopOwnerDashboard extends StatelessWidget {
           child: _buildQuickAction(
             context,
             icon: Icons.inventory_2_rounded,
+            accent: ShopWiseColors.olive,
             title: 'Products',
             subtitle: 'Manage',
             onTap: () {
@@ -485,6 +579,7 @@ class ShopOwnerDashboard extends StatelessWidget {
           child: _buildQuickAction(
             context,
             icon: Icons.add_rounded,
+            accent: ShopWiseColors.enquiries,
             title: 'Add Product',
             subtitle: 'Create new',
             onTap: () {
@@ -502,35 +597,37 @@ class ShopOwnerDashboard extends StatelessWidget {
   Widget _buildQuickAction(
     BuildContext context, {
     required IconData icon,
+    required Color accent,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      color: ShopWiseColors.surface,
+      elevation: ShopWiseElevation.subtle / 2,
+      shadowColor: textPrimary.withValues(alpha: 0.06),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+        side: const BorderSide(color: border),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(17),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: border),
-          ),
+          padding: const EdgeInsets.all(15),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.10),
+                  color: accent.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: primaryDark, size: 22),
+                child: Icon(icon, color: accent, size: 22),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: const TextStyle(
@@ -554,15 +651,21 @@ class ShopOwnerDashboard extends StatelessWidget {
   Widget _buildManagementCard(
     BuildContext context, {
     required IconData icon,
+    required Color accent,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
+      color: ShopWiseColors.surface,
+      elevation: ShopWiseElevation.subtle / 2,
+      shadowColor: textPrimary.withValues(alpha: 0.06),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+        side: const BorderSide(color: border),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(15),
@@ -572,10 +675,10 @@ class ShopOwnerDashboard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
+                  color: accent.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: primaryDark, size: 22),
+                child: Icon(icon, color: accent, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -603,7 +706,7 @@ class ShopOwnerDashboard extends StatelessWidget {
               ),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: Color(0xFFCBD5E1),
+                color: ShopWiseColors.border,
                 size: 15,
               ),
             ],
@@ -617,18 +720,22 @@ class ShopOwnerDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(20),
       ),
       child: const Row(
         children: [
-          Icon(Icons.auto_awesome_rounded, color: primary, size: 26),
+          Icon(
+            Icons.auto_awesome_rounded,
+            color: ShopWiseColors.olive,
+            size: 26,
+          ),
           SizedBox(width: 13),
           Expanded(
             child: Text(
               'Keep your product prices and stock updated to help customers make better buying decisions.',
               style: TextStyle(
-                color: Colors.white70,
+                color: ShopWiseColors.textSecondary,
                 fontSize: 12,
                 height: 1.45,
               ),

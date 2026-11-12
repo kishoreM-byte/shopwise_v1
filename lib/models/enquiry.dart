@@ -14,6 +14,13 @@ class ProductEnquiry {
   final int quantity;
   final String message;
   final String status;
+
+  // Purchase state. These fields are optional for backwards compatibility
+  // with existing enquiry documents.
+  final String? orderId;
+  final String? purchaseStatus;
+  final DateTime? purchasedAt;
+
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -31,6 +38,9 @@ class ProductEnquiry {
     required this.quantity,
     required this.message,
     required this.status,
+    this.orderId,
+    this.purchaseStatus,
+    this.purchasedAt,
     this.createdAt,
     this.updatedAt,
   });
@@ -50,6 +60,9 @@ class ProductEnquiry {
       'quantity': quantity,
       'message': message,
       'status': status,
+      'orderId': orderId,
+      'purchaseStatus': purchaseStatus,
+      'purchasedAt': purchasedAt,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -70,6 +83,9 @@ class ProductEnquiry {
       quantity: (map['quantity'] as num?)?.toInt() ?? 1,
       message: map['message'] as String? ?? '',
       status: map['status'] as String? ?? 'pending',
+      orderId: map['orderId'] as String?,
+      purchaseStatus: map['purchaseStatus'] as String?,
+      purchasedAt: _dateFromMap(map['purchasedAt']),
       createdAt: _dateFromMap(map['createdAt']),
       updatedAt: _dateFromMap(map['updatedAt']),
     );

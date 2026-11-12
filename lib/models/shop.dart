@@ -22,10 +22,12 @@ class Shop {
   // Delivery settings
   final bool deliveryAvailable;
   final double deliveryCharge;
+  final bool deliveryChargeIsKnown;
 
   // Installation settings
   final bool installationAvailable;
   final double installationCharge;
+  final bool installationChargeIsKnown;
 
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -46,8 +48,10 @@ class Shop {
     required this.isOpen,
     this.deliveryAvailable = false,
     this.deliveryCharge = 0,
+    this.deliveryChargeIsKnown = true,
     this.installationAvailable = false,
     this.installationCharge = 0,
+    this.installationChargeIsKnown = true,
     this.createdAt,
     this.updatedAt,
   });
@@ -97,15 +101,13 @@ class Shop {
       reviewCount: (map['reviewCount'] as num?)?.toInt() ?? 0,
       isOpen: map['isOpen'] as bool? ?? true,
 
-      deliveryAvailable:
-          map['deliveryAvailable'] as bool? ?? false,
-      deliveryCharge:
-          (map['deliveryCharge'] as num?)?.toDouble() ?? 0,
+      deliveryAvailable: map['deliveryAvailable'] as bool? ?? false,
+      deliveryCharge: (map['deliveryCharge'] as num?)?.toDouble() ?? 0,
+      deliveryChargeIsKnown: _isKnownCharge(map['deliveryCharge']),
 
-      installationAvailable:
-          map['installationAvailable'] as bool? ?? false,
-      installationCharge:
-          (map['installationCharge'] as num?)?.toDouble() ?? 0,
+      installationAvailable: map['installationAvailable'] as bool? ?? false,
+      installationCharge: (map['installationCharge'] as num?)?.toDouble() ?? 0,
+      installationChargeIsKnown: _isKnownCharge(map['installationCharge']),
 
       createdAt: _dateFromMap(map['createdAt']),
       updatedAt: _dateFromMap(map['updatedAt']),
@@ -128,6 +130,9 @@ class Shop {
     return null;
   }
 
+  static bool _isKnownCharge(dynamic value) =>
+      value is num && value.isFinite && value >= 0;
+
   Shop copyWith({
     String? id,
     String? ownerId,
@@ -144,8 +149,10 @@ class Shop {
     bool? isOpen,
     bool? deliveryAvailable,
     double? deliveryCharge,
+    bool? deliveryChargeIsKnown,
     bool? installationAvailable,
     double? installationCharge,
+    bool? installationChargeIsKnown,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -164,15 +171,16 @@ class Shop {
       reviewCount: reviewCount ?? this.reviewCount,
       isOpen: isOpen ?? this.isOpen,
 
-      deliveryAvailable:
-          deliveryAvailable ?? this.deliveryAvailable,
-      deliveryCharge:
-          deliveryCharge ?? this.deliveryCharge,
+      deliveryAvailable: deliveryAvailable ?? this.deliveryAvailable,
+      deliveryCharge: deliveryCharge ?? this.deliveryCharge,
+      deliveryChargeIsKnown:
+          deliveryChargeIsKnown ?? this.deliveryChargeIsKnown,
 
       installationAvailable:
           installationAvailable ?? this.installationAvailable,
-      installationCharge:
-          installationCharge ?? this.installationCharge,
+      installationCharge: installationCharge ?? this.installationCharge,
+      installationChargeIsKnown:
+          installationChargeIsKnown ?? this.installationChargeIsKnown,
 
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 
 import '../../services/auth_service.dart';
 import '../../services/role_service.dart';
@@ -101,7 +102,7 @@ class ProfileScreen extends StatelessWidget {
     final User? user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
         title: const Text(
           'Profile',
@@ -115,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF10B981)),
+              child: CircularProgressIndicator(color: ShopWiseColors.emerald),
             );
           }
 
@@ -130,12 +131,16 @@ class ProfileScreen extends StatelessWidget {
                 // Profile image
                 CircleAvatar(
                   radius: 48,
-                  backgroundColor: const Color(0xFF10B981),
+                  backgroundColor: ShopWiseColors.emerald,
                   backgroundImage: user?.photoURL != null
                       ? NetworkImage(user!.photoURL!)
                       : null,
                   child: user?.photoURL == null
-                      ? const Icon(Icons.person, color: Colors.white, size: 48)
+                      ? const Icon(
+                          Icons.person,
+                          color: ShopWiseColors.surface,
+                          size: 48,
+                        )
                       : null,
                 ),
 
@@ -153,7 +158,10 @@ class ProfileScreen extends StatelessWidget {
 
                 Text(
                   user?.email ?? '',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  style: const TextStyle(
+                    color: ShopWiseColors.textMuted,
+                    fontSize: 14,
+                  ),
                 ),
 
                 const SizedBox(height: 28),
@@ -273,14 +281,17 @@ class ProfileScreen extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+            color: ShopWiseColors.emerald.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: const Icon(Icons.badge_outlined, color: Color(0xFF10B981)),
+          child: const Icon(
+            Icons.badge_outlined,
+            color: ShopWiseColors.emerald,
+          ),
         ),
         title: Text(
           title,
-          style: const TextStyle(color: Colors.grey, fontSize: 13),
+          style: const TextStyle(color: ShopWiseColors.textMuted, fontSize: 13),
         ),
         subtitle: Text(
           value,
@@ -295,7 +306,7 @@ class ProfileScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    Color iconColor = const Color(0xFF10B981),
+    Color iconColor = ShopWiseColors.emerald,
   }) {
     return Card(
       elevation: 1,
@@ -319,10 +330,16 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.only(top: 4),
           child: Text(
             subtitle,
-            style: const TextStyle(color: Colors.grey, fontSize: 13),
+            style: const TextStyle(
+              color: ShopWiseColors.textMuted,
+              fontSize: 13,
+            ),
           ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: const Icon(
+          Icons.chevron_right,
+          color: ShopWiseColors.textMuted,
+        ),
         onTap: onTap,
       ),
     );

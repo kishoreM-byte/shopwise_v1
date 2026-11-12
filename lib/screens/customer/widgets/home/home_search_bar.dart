@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../theme/design_tokens.dart';
 
 class HomeSearchBar extends StatelessWidget {
-  const HomeSearchBar({
-    super.key,
-    required this.onTap,
-  });
+  const HomeSearchBar({super.key, required this.onTap});
 
   final VoidCallback onTap;
 
@@ -15,13 +12,13 @@ class HomeSearchBar extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(21),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         onTap: onTap,
         child: Ink(
           height: 62,
           decoration: BoxDecoration(
             color: ShopWiseColors.surface,
-            borderRadius: BorderRadius.circular(21),
+            borderRadius: BorderRadius.circular(ShopWiseRadius.large),
             border: Border.all(
               color: ShopWiseColors.border.withValues(alpha: 0.75),
             ),
@@ -45,15 +42,15 @@ class HomeSearchBar extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        ShopWiseColors.search.withValues(alpha: 0.16),
-                        ShopWiseColors.search.withValues(alpha: 0.07),
+                        ShopWiseColors.olive.withValues(alpha: 0.16),
+                        ShopWiseColors.emerald.withValues(alpha: 0.07),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Icon(
                     Icons.search_rounded,
-                    color: ShopWiseColors.search,
+                    color: ShopWiseColors.olive,
                     size: 21,
                   ),
                 ),

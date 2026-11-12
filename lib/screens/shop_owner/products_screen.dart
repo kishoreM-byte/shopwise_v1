@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/product.dart';
 import '../../services/product_service.dart';
+import '../../theme/design_tokens.dart';
 import 'add_product_screen.dart';
-import '../customer/product_details_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -28,7 +28,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           product.category.toLowerCase().contains(query);
 
       final bool matchesFilter = switch (_selectedFilter) {
-        'Available' => product.isAvailable,
+        'Available' => product.isAvailableForPurchase,
         'Out of stock' => product.stock <= 0,
         'Offers' => product.hasOffer,
         _ => true,
@@ -66,10 +66,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text(
-            'Delete product?',
+            'Hide product?',
             style: TextStyle(fontWeight: FontWeight.w800),
           ),
-          content: Text('Are you sure you want to remove "${product.name}"?'),
+          content: Text(
+            'Hide "${product.name}" from customers? Existing order records will be preserved.',
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -78,11 +80,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
               onPressed: () {
                 Navigator.pop(dialogContext, true);
               },
-              child: const Text('Delete'),
+              child: const Text('Hide product'),
             ),
           ],
         );
@@ -102,7 +103,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Product deleted'),
+          content: Text('Product hidden from customers'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -113,7 +114,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to delete product: $e'),
+          content: Text('Failed to hide product: $e'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -123,11 +124,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: ShopWiseColors.background,
         elevation: 0,
-        foregroundColor: const Color(0xFF0F172A),
+        foregroundColor: ShopWiseColors.textPrimary,
         title: const Text(
           'Products',
           style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
@@ -146,7 +147,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF10B981)),
+              child: CircularProgressIndicator(color: ShopWiseColors.emerald),
             );
           }
 
@@ -159,7 +160,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           final List<Product> filteredProducts = _filterProducts(products);
 
           return RefreshIndicator(
-            color: const Color(0xFF10B981),
+            color: ShopWiseColors.emerald,
             onRefresh: () async {
               await Future<void>.delayed(const Duration(milliseconds: 400));
 
@@ -200,8 +201,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF10B981),
-        foregroundColor: Colors.white,
+        backgroundColor: ShopWiseColors.emerald,
+        foregroundColor: ShopWiseColors.surface,
         onPressed: _addProduct,
         icon: const Icon(Icons.add_rounded),
         label: const Text(
@@ -213,22 +214,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildSummary(List<Product> products) {
-    final int available = products.where((p) => p.isAvailable).length;
+    final int available = products
+        .where((p) => p.isAvailableForPurchase)
+        .length;
     final int outOfStock = products.where((p) => p.stock <= 0).length;
     final int offers = products.where((p) => p.hasOffer).length;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-        ),
+        color: ShopWiseColors.surfaceSoft,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.10),
+            color: ShopWiseColors.olive.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -243,12 +242,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.16),
+                  color: ShopWiseColors.oliveSoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.inventory_2_rounded,
-                  color: Color(0xFF34D399),
+                  color: ShopWiseColors.olive,
                   size: 22,
                 ),
               ),
@@ -260,7 +259,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Text(
                       'Your Products',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: ShopWiseColors.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
@@ -269,7 +268,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     Text(
                       'Manage your shop inventory',
                       style: TextStyle(
-                        color: Color(0xFF94A3B8),
+                        color: ShopWiseColors.textSecondary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -283,13 +282,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: ShopWiseColors.surface.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${products.length} items',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: ShopWiseColors.textPrimary,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
@@ -337,12 +336,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }) {
     return Column(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF34D399)),
+        Icon(icon, size: 18, color: ShopWiseColors.olive),
         const SizedBox(height: 7),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: ShopWiseColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w900,
           ),
@@ -352,7 +351,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           label,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            color: Color(0xFF94A3B8),
+            color: ShopWiseColors.textSecondary,
             fontSize: 9,
             fontWeight: FontWeight.w600,
           ),
@@ -365,7 +364,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Container(
       width: 1,
       height: 48,
-      color: Colors.white.withValues(alpha: 0.08),
+      color: ShopWiseColors.olive.withValues(alpha: 0.20),
     );
   }
 
@@ -380,11 +379,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
       decoration: InputDecoration(
         hintText: 'Search products or categories...',
         hintStyle: const TextStyle(
-          color: Color(0xFF94A3B8),
+          color: ShopWiseColors.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
-        prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF64748B)),
+        prefixIcon: const Icon(
+          Icons.search_rounded,
+          color: ShopWiseColors.textSecondary,
+        ),
         suffixIcon: _searchQuery.isNotEmpty
             ? IconButton(
                 onPressed: () {
@@ -392,11 +394,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     _searchQuery = '';
                   });
                 },
-                icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: ShopWiseColors.textMuted,
+                ),
               )
             : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: ShopWiseColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 15,
@@ -407,11 +412,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: const BorderSide(color: ShopWiseColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFF10B981), width: 1.5),
+          borderSide: const BorderSide(color: ShopWiseColors.olive, width: 1.5),
         ),
       ),
     );
@@ -439,19 +444,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   });
                 },
                 showCheckmark: false,
-                selectedColor: const Color(0xFFD1FAE5),
-                backgroundColor: Colors.white,
+                selectedColor: ShopWiseColors.oliveSoft,
+                backgroundColor: ShopWiseColors.surface,
                 labelStyle: TextStyle(
                   color: selected
-                      ? const Color(0xFF047857)
-                      : const Color(0xFF475569),
+                      ? ShopWiseColors.olive
+                      : ShopWiseColors.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                 ),
                 side: BorderSide(
                   color: selected
-                      ? const Color(0xFF10B981)
-                      : const Color(0xFFE2E8F0),
+                      ? ShopWiseColors.olive
+                      : ShopWiseColors.border,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(13),
@@ -480,24 +485,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProductDetailsScreen(product: product),
-            ),
-          );
-        },
+        borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
+        onTap: () => _editProduct(product),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            color: ShopWiseColors.surface,
+            borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
+            border: Border.all(color: ShopWiseColors.border),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.045),
+                color: ShopWiseColors.textPrimary.withValues(alpha: 0.045),
                 blurRadius: 18,
                 offset: const Offset(0, 7),
               ),
@@ -519,13 +517,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
+                          color: ShopWiseColors.olive,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
                           'OFFER',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: ShopWiseColors.surface,
                             fontSize: 8,
                             fontWeight: FontWeight.w900,
                           ),
@@ -548,7 +546,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF0F172A),
+                              color: ShopWiseColors.textPrimary,
                               fontSize: 16,
                               height: 1.15,
                               fontWeight: FontWeight.w800,
@@ -576,7 +574,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   children: [
                                     Icon(
                                       Icons.edit_outlined,
-                                      color: Color(0xFF2563EB),
+                                      color: ShopWiseColors.olive,
                                       size: 20,
                                     ),
                                     SizedBox(width: 10),
@@ -589,19 +587,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 child: Row(
                                   children: [
                                     Icon(
-                                      Icons.delete_outline_rounded,
-                                      color: Color(0xFFDC2626),
+                                      Icons.visibility_off_outlined,
+                                      color: ShopWiseColors.error,
                                       size: 20,
                                     ),
                                     SizedBox(width: 10),
-                                    Text('Delete'),
+                                    Text('Hide'),
                                   ],
                                 ),
                               ),
                             ],
                             icon: const Icon(
                               Icons.more_horiz_rounded,
-                              color: Color(0xFF64748B),
+                              color: ShopWiseColors.textMuted,
                               size: 21,
                             ),
                           ),
@@ -615,13 +613,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: ShopWiseColors.surfaceSoft,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         product.category,
                         style: const TextStyle(
-                          color: Color(0xFF475569),
+                          color: ShopWiseColors.textSecondary,
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                         ),
@@ -634,7 +632,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         Text(
                           '₹${product.price.toStringAsFixed(0)}',
                           style: const TextStyle(
-                            color: Color(0xFF059669),
+                            color: ShopWiseColors.olive,
                             fontSize: 19,
                             fontWeight: FontWeight.w900,
                           ),
@@ -646,7 +644,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             child: Text(
                               '₹${product.originalPrice!.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                color: Color(0xFF94A3B8),
+                                color: ShopWiseColors.textMuted,
                                 fontSize: 11,
                                 decoration: TextDecoration.lineThrough,
                               ),
@@ -661,13 +659,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF7ED),
+                                color: ShopWiseColors.oliveSoft,
                                 borderRadius: BorderRadius.circular(7),
                               ),
                               child: Text(
                                 '$discountPercent% OFF',
                                 style: const TextStyle(
-                                  color: Color(0xFFC2410C),
+                                  color: ShopWiseColors.search,
                                   fontSize: 8,
                                   fontWeight: FontWeight.w900,
                                 ),
@@ -687,15 +685,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               ? 'Available'
                               : 'Hidden',
                           outOfStock
-                              ? const Color(0xFFFEE2E2)
+                              ? ShopWiseColors.error.withValues(alpha: 0.12)
                               : product.isAvailable
-                              ? const Color(0xFFD1FAE5)
-                              : const Color(0xFFF1F5F9),
+                              ? ShopWiseColors.oliveSoft
+                              : ShopWiseColors.surfaceSoft,
                           outOfStock
-                              ? const Color(0xFFB91C1C)
+                              ? ShopWiseColors.error
                               : product.isAvailable
-                              ? const Color(0xFF047857)
-                              : const Color(0xFF64748B),
+                              ? ShopWiseColors.olive
+                              : ShopWiseColors.textSecondary,
                         ),
                         const SizedBox(width: 7),
                         Flexible(
@@ -703,7 +701,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             '${product.stock} in stock',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              color: Color(0xFF64748B),
+                              color: ShopWiseColors.textMuted,
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
@@ -724,15 +722,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget _buildProductImage(Product product) {
     if (product.imageUrls.isEmpty) {
       return Container(
-        width: 82,
-        height: 82,
+        width: 88,
+        height: 88,
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: ShopWiseColors.surfaceSoft,
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(
           Icons.image_outlined,
-          color: Color(0xFF94A3B8),
+          color: ShopWiseColors.textMuted,
           size: 30,
         ),
       );
@@ -742,17 +740,38 @@ class _ProductsScreenState extends State<ProductsScreen> {
       borderRadius: BorderRadius.circular(16),
       child: Image.network(
         product.imageUrls.first,
-        width: 82,
-        height: 82,
+        width: 88,
+        height: 88,
         fit: BoxFit.cover,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+
+          return const SizedBox(
+            width: 88,
+            height: 88,
+            child: ColoredBox(
+              color: ShopWiseColors.surfaceSoft,
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: ShopWiseColors.emerald,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
         errorBuilder: (_, error, stackTrace) {
           return Container(
-            width: 82,
-            height: 82,
-            color: const Color(0xFFF1F5F9),
+            width: 88,
+            height: 88,
+            color: ShopWiseColors.surfaceSoft,
             child: const Icon(
               Icons.broken_image_outlined,
-              color: Color(0xFF94A3B8),
+              color: ShopWiseColors.textMuted,
             ),
           );
         },
@@ -807,9 +826,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Container(
       padding: const EdgeInsets.all(30),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         children: [
@@ -817,10 +836,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: const Color(0xFFD1FAE5),
+              color: ShopWiseColors.oliveSoft,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(icon, color: const Color(0xFF059669), size: 30),
+            child: Icon(icon, color: ShopWiseColors.olive, size: 30),
           ),
 
           const SizedBox(height: 16),
@@ -831,7 +850,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: ShopWiseColors.textPrimary,
             ),
           ),
 
@@ -843,7 +862,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             style: const TextStyle(
               fontSize: 12,
               height: 1.5,
-              color: Color(0xFF64748B),
+              color: ShopWiseColors.textMuted,
             ),
           ),
 
@@ -852,7 +871,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
             FilledButton.icon(
               onPressed: onPressed,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                backgroundColor: ShopWiseColors.olive,
+                foregroundColor: ShopWiseColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               icon: const Icon(Icons.add_rounded),
               label: Text(buttonText),
@@ -873,7 +896,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             const Icon(
               Icons.cloud_off_rounded,
               size: 48,
-              color: Color(0xFF94A3B8),
+              color: ShopWiseColors.textMuted,
             ),
 
             const SizedBox(height: 14),
@@ -888,7 +911,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+              style: const TextStyle(
+                color: ShopWiseColors.textSecondary,
+                fontSize: 12,
+              ),
             ),
           ],
         ),

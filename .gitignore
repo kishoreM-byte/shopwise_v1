@@ -43,3 +43,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Private keys and certificates
+*.pem
+*.p12
+*.pfx
+*.key
+*.jks
+*.keystore
+
+# Service account credentials
+*service-account*.json
+*service_account*.json
+
+# Firebase rules test artifacts
+node_modules/
+rules-test/firestore-debug.log
+
+# Local backup files
+firestore.rules.backup_before_product_shop_ownership

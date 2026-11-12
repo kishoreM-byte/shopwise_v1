@@ -17,19 +17,10 @@ class HomeSectionTitle extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
         ),
         if (actionText != null && onAction != null)
-          TextButton(
-            onPressed: onAction,
-            child: Text(actionText!),
-          ),
+          TextButton(onPressed: onAction, child: Text(actionText!)),
       ],
     );
   }

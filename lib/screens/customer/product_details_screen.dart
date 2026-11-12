@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../models/product.dart';
 import '../../models/shop.dart';
+import '../../theme/design_tokens.dart';
+import '../../services/customer/route_poi_service.dart';
 import '../../services/route_service.dart';
 import '../../services/shop_service.dart';
 import '../../services/customer/compare_service.dart';
@@ -13,12 +16,15 @@ import 'widgets/product_info.dart';
 import 'widgets/shop_info_card.dart';
 import 'widgets/smart_score_card.dart';
 import 'widgets/shop_route_map.dart';
+import 'widgets/route_travel_intelligence_card.dart';
 import 'widgets/product_actions.dart';
 import 'buy_enquire_screen.dart';
 import 'widgets/product_reviews.dart';
 import 'widgets/review_composer.dart';
 import '../../models/review.dart';
 import '../../services/customer/review_service.dart';
+import '../../services/customer/compare/nearby_compare_service.dart';
+import 'widgets/compare/components/nearby_alternatives_section.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
@@ -32,10 +38,12 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   final ShopService _shopService = ShopService();
   final RouteService _routeService = RouteService();
+  final RoutePoiService _routePoiService = RoutePoiService();
   final WishlistService _wishlistService = WishlistService();
   final CompareService _compareService = CompareService();
   final ShareService _shareService = ShareService();
   final ReviewService _reviewService = ReviewService();
+  final NearbyCompareService _nearbyCompareService = NearbyCompareService();
 
   late Future<Shop?> _shopFuture;
 
@@ -45,16 +53,82 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Position? _customerPosition;
   ShopRouteResult? _routeResult;
   String? _routeError;
+  RoutePoiResult? _routePoiResult;
+  String? _routePoiError;
+  bool _isLoadingRoutePoi = false;
   bool _isGettingCustomerLocation = false;
   bool _isLoadingRoute = false;
   ProductReview? _myReview;
   bool _isLoadingMyReview = true;
+  bool _isLoadingNearbyAlternatives = false;
+  List<NearbyCompareItem> _nearbyAlternatives = [];
+  NearbyComparisonAnalysis? _nearbyComparisonAnalysis;
+  String? _nearbyAlternativesError = 'Enable location to compare nearby shops.';
 
   @override
   void initState() {
     super.initState();
     _shopFuture = _loadShop();
     _loadProductActionState();
+    _loadMyReview();
+  }
+
+  Future<void> _loadNearbyAlternatives() async {
+    final Position? position = _customerPosition;
+
+    if (position == null) {
+      if (!mounted) return;
+
+      setState(() {
+        _nearbyAlternatives = [];
+        _nearbyComparisonAnalysis = null;
+        _nearbyAlternativesError =
+            'Location is unavailable. Enable location to compare nearby shops.';
+        _isLoadingNearbyAlternatives = false;
+      });
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoadingNearbyAlternatives = true;
+        _nearbyAlternativesError = null;
+      });
+    }
+
+    try {
+      final discovered = await _nearbyCompareService.findAlternatives(
+        selectedProduct: widget.product,
+        customerLatitude: position.latitude,
+        customerLongitude: position.longitude,
+      );
+      final analysis = await _nearbyCompareService.analyzeCosts(
+        items: discovered,
+        customerLatitude: position.latitude,
+        customerLongitude: position.longitude,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _nearbyComparisonAnalysis = analysis;
+        _nearbyAlternatives = analysis.items;
+        _nearbyAlternativesError = null;
+        _isLoadingNearbyAlternatives = false;
+      });
+    } catch (e) {
+      debugPrint('ShopWise nearby compare error: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _nearbyAlternatives = [];
+        _nearbyComparisonAnalysis = null;
+        _nearbyAlternativesError =
+            'Nearby comparisons could not be loaded. Please try again.';
+        _isLoadingNearbyAlternatives = false;
+      });
+    }
   }
 
   Future<void> _loadMyReview() async {
@@ -139,6 +213,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         _customerPosition = position;
       });
 
+      await _loadNearbyAlternatives();
       await _loadRouteFromCustomerLocation(position);
     } catch (e) {
       if (!mounted) return;
@@ -184,7 +259,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       setState(() {
         _routeResult = route;
         _routeError = null;
+        _routePoiResult = null;
+        _routePoiError = null;
       });
+
+      await _loadRoutePetrolStations(route.points);
     } catch (e) {
       debugPrint('ShopWise route error: $e');
 
@@ -194,6 +273,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         _routeResult = null;
         _routeError =
             'Unable to calculate the road route. You can still use manual travel distance below.';
+        _routePoiResult = null;
+        _routePoiError = null;
       });
     } finally {
       if (mounted) {
@@ -202,6 +283,56 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         });
       }
     }
+  }
+
+  Future<void> _loadRoutePetrolStations(List<LatLng> routePoints) async {
+    if (routePoints.length < 2) {
+      return;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingRoutePoi = true;
+      _routePoiError = null;
+    });
+
+    try {
+      final RoutePoiResult result = await _routePoiService
+          .getPetrolStationsAlongRoute(routePoints: routePoints);
+
+      if (!mounted) return;
+
+      setState(() {
+        _routePoiResult = result;
+        _routePoiError = null;
+      });
+    } catch (e) {
+      debugPrint('ShopWise route POI error: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _routePoiResult = null;
+        _routePoiError = 'Unable to load petrol station information.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingRoutePoi = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _retryRoutePetrolStations() async {
+    final ShopRouteResult? route = _routeResult;
+
+    if (route == null || _isLoadingRoutePoi) {
+      return;
+    }
+
+    await _loadRoutePetrolStations(route.points);
   }
 
   Future<void> _retryRouteCalculation() async {
@@ -276,7 +407,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     setState(() => _isActionLoading = true);
 
     try {
-      final added = await _compareService.toggle(widget.product.id);
+      final added = await _compareService.toggleSameProduct(widget.product);
 
       if (!mounted) return;
 
@@ -359,18 +490,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final Product product = widget.product;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: ShopWiseColors.background,
         elevation: 0,
         title: const Text(
           'Product Details',
           style: TextStyle(
-            color: Color(0xFF0F172A),
+            color: ShopWiseColors.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
-        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+        iconTheme: const IconThemeData(color: ShopWiseColors.textPrimary),
       ),
       bottomNavigationBar: ProductActions(
         product: product,
@@ -417,6 +548,114 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               },
             ),
 
+            const SizedBox(height: 18),
+
+            RouteTravelIntelligenceCard(
+              distanceKm: _routeResult?.distanceKm,
+              durationMinutes: _routeResult?.durationMinutes,
+              petrolStationCount: _routePoiResult?.petrolStationCount ?? 0,
+              mechanicShopCount: _routePoiResult?.mechanicShopCount ?? 0,
+              isLoadingPetrolStations: _isLoadingRoutePoi,
+              petrolStationError: _routePoiError,
+              onRetry: _retryRoutePetrolStations,
+            ),
+
+            const SizedBox(height: 28),
+
+            if (_isLoadingNearbyAlternatives)
+              const NearbyComparisonStatusCard(
+                title: 'Finding comparable nearby shops',
+                message: 'Checking matches, routes and available shop charges.',
+                isLoading: true,
+              )
+            else if (_nearbyAlternativesError != null)
+              NearbyComparisonStatusCard(
+                title: _customerPosition == null
+                    ? 'Location needed'
+                    : 'Couldn’t load nearby options',
+                message: _customerPosition == null
+                    ? 'Allow location access to compare nearby shops.'
+                    : _nearbyAlternativesError!,
+                actionLabel: _customerPosition == null
+                    ? 'Enable location'
+                    : 'Try again',
+                onAction: _customerPosition == null
+                    ? _getCustomerLocation
+                    : _loadNearbyAlternatives,
+              )
+            else if (_customerPosition != null)
+              StreamBuilder<Set<String>>(
+                stream: _compareService.watchCompareIds(),
+                builder: (context, snapshot) {
+                  final compareIds = snapshot.data ?? const <String>{};
+
+                  return NearbyAlternativesSection(
+                    selectedProduct: product,
+                    alternatives: _nearbyAlternatives,
+                    analysis: _nearbyComparisonAnalysis,
+                    compareIds: compareIds,
+                    onCompare: (alternative) async {
+                      try {
+                        final wasAlreadyCompared = compareIds.contains(
+                          alternative.id,
+                        );
+
+                        if (wasAlreadyCompared) {
+                          return true;
+                        } else {
+                          await _compareService.addProductPair(
+                            product,
+                            alternative,
+                          );
+                        }
+
+                        final added = !wasAlreadyCompared;
+
+                        if (!context.mounted) return added;
+
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                added
+                                    ? 'Added to comparison.'
+                                    : 'Removed from comparison.',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+
+                        return added;
+                      } catch (e) {
+                        if (!context.mounted) return false;
+
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e.toString().replaceFirst('Exception: ', ''),
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+
+                        return false;
+                      }
+                    },
+                    onOpenProduct: (candidate) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              ProductDetailsScreen(product: candidate),
+                        ),
+                      );
+                    },
+                    onRetryEstimates: _loadNearbyAlternatives,
+                  );
+                },
+              ),
             const SizedBox(height: 28),
 
             const Text(
@@ -424,7 +663,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
               ),
             ),
 
@@ -460,13 +699,16 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: ShopWiseColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'See your location and the shop location on the map.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ShopWiseColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 14),
                     if (_customerPosition == null)
@@ -483,7 +725,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: ShopWiseColors.surface,
                                   ),
                                 )
                               : const Icon(Icons.my_location_rounded),
@@ -493,7 +735,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 : 'Show Route From My Location',
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981),
+                            backgroundColor: ShopWiseColors.search,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -519,7 +761,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
             const SizedBox(height: 30),
 
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            const Divider(height: 1, color: ShopWiseColors.border),
 
             const SizedBox(height: 28),
 

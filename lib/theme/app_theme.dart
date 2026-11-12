@@ -10,7 +10,7 @@ class AppTheme {
   static const Color primaryDark = ShopWiseColors.emeraldDeep;
   static const Color primaryLight = ShopWiseColors.emeraldSoft;
 
-  static const Color secondary = ShopWiseColors.search;
+  static const Color secondary = ShopWiseColors.olive;
   static const Color background = ShopWiseColors.background;
   static const Color surface = ShopWiseColors.surface;
 
@@ -25,6 +25,7 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     final TextTheme base = GoogleFonts.plusJakartaSansTextTheme();
+    final TextTheme editorial = GoogleFonts.playfairDisplayTextTheme(base);
 
     return ThemeData(
       useMaterial3: true,
@@ -48,46 +49,46 @@ class AppTheme {
       splashFactory: InkSparkle.splashFactory,
 
       textTheme: base.copyWith(
-        displayLarge: base.displayLarge?.copyWith(
+        displayLarge: editorial.displayLarge?.copyWith(
           color: textPrimary,
           fontSize: 32,
           fontWeight: FontWeight.w800,
           height: 1.10,
           letterSpacing: -1.0,
         ),
-        displayMedium: base.displayMedium?.copyWith(
+        displayMedium: editorial.displayMedium?.copyWith(
           color: textPrimary,
           fontSize: 28,
           fontWeight: FontWeight.w800,
           height: 1.15,
           letterSpacing: -0.8,
         ),
-        displaySmall: base.displaySmall?.copyWith(
+        displaySmall: editorial.displaySmall?.copyWith(
           color: textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.w700,
           height: 1.18,
           letterSpacing: -0.5,
         ),
-        headlineLarge: base.headlineLarge?.copyWith(
+        headlineLarge: editorial.headlineLarge?.copyWith(
           color: textPrimary,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           height: 1.2,
           letterSpacing: -0.35,
         ),
-        headlineMedium: base.headlineMedium?.copyWith(
+        headlineMedium: editorial.headlineMedium?.copyWith(
           color: textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.25,
         ),
-        headlineSmall: base.headlineSmall?.copyWith(
+        headlineSmall: editorial.headlineSmall?.copyWith(
           color: textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
-        titleLarge: base.titleLarge?.copyWith(
+        titleLarge: editorial.titleLarge?.copyWith(
           color: textPrimary,
           fontSize: 17,
           fontWeight: FontWeight.w700,
@@ -250,15 +251,27 @@ class AppTheme {
         backgroundColor: surface,
         elevation: 0,
         height: 76,
-        indicatorColor: primaryLight,
+        indicatorColor: ShopWiseColors.emeraldSoft,
         surfaceTintColor: Colors.transparent,
-        labelTextStyle: WidgetStatePropertyAll(
-          GoogleFonts.plusJakartaSans(
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return GoogleFonts.plusJakartaSans(
             fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        iconTheme: const WidgetStatePropertyAll(IconThemeData(size: 23)),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected
+                ? ShopWiseColors.emeraldDeep
+                : ShopWiseColors.textMuted,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: selected ? 24 : 22,
+            color: selected
+                ? ShopWiseColors.emeraldDeep
+                : ShopWiseColors.textMuted,
+          );
+        }),
       ),
 
       dividerTheme: const DividerThemeData(

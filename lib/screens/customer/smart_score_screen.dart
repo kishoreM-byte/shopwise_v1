@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 
 import '../../models/product.dart';
 import '../../services/product_service.dart';
@@ -11,11 +12,27 @@ class SmartScoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
         title: const Text(
           'Smart Score',
           style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(30),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Base ranking · excludes travel, delivery and installation costs',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ShopWiseColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -41,7 +58,7 @@ class SmartScoreScreen extends StatelessWidget {
             return const Center(
               child: Text(
                 'Add products to start using Smart Score.',
-                style: TextStyle(color: Color(0xFF64748B)),
+                style: TextStyle(color: ShopWiseColors.textSecondary),
               ),
             );
           }
@@ -57,10 +74,10 @@ class SmartScoreScreen extends StatelessWidget {
 
               return Card(
                 elevation: 0,
-                color: Colors.white,
+                color: ShopWiseColors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  side: const BorderSide(color: ShopWiseColors.border),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(20),
@@ -91,7 +108,7 @@ class SmartScoreScreen extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF059669),
+                                color: ShopWiseColors.emerald,
                               ),
                             ),
                           ),
@@ -115,7 +132,7 @@ class SmartScoreScreen extends StatelessWidget {
                                 result.scoreLabel,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF059669),
+                                  color: ShopWiseColors.emerald,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -125,9 +142,9 @@ class SmartScoreScreen extends StatelessWidget {
                                 child: LinearProgressIndicator(
                                   value: score / 100,
                                   minHeight: 6,
-                                  backgroundColor: const Color(0xFFE2E8F0),
+                                  backgroundColor: ShopWiseColors.border,
                                   valueColor: const AlwaysStoppedAnimation(
-                                    Color(0xFF10B981),
+                                    ShopWiseColors.emerald,
                                   ),
                                 ),
                               ),
@@ -137,7 +154,7 @@ class SmartScoreScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         const Icon(
                           Icons.chevron_right_rounded,
-                          color: Color(0xFF94A3B8),
+                          color: ShopWiseColors.textMuted,
                         ),
                       ],
                     ),

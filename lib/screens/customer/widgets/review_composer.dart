@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/review.dart';
 import '../../../services/customer/review_service.dart';
+import '../../../theme/design_tokens.dart';
 
 class ReviewComposer extends StatefulWidget {
   final String productId;
@@ -77,9 +78,7 @@ class _ReviewComposerState extends State<ReviewComposer> {
     } catch (e) {
       if (!mounted) return;
 
-      _message(
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      _message(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -91,10 +90,7 @@ class _ReviewComposerState extends State<ReviewComposer> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
   }
 
@@ -104,9 +100,9 @@ class _ReviewComposerState extends State<ReviewComposer> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: ShopWiseColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +110,7 @@ class _ReviewComposerState extends State<ReviewComposer> {
           Text(
             _isEditing ? 'Edit your review' : 'Share your experience',
             style: const TextStyle(
-              color: Color(0xFF0F172A),
+              color: ShopWiseColors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.w800,
             ),
@@ -123,7 +119,7 @@ class _ReviewComposerState extends State<ReviewComposer> {
           const Text(
             'Your feedback helps other customers make better decisions.',
             style: TextStyle(
-              color: Color(0xFF64748B),
+              color: ShopWiseColors.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -154,7 +150,7 @@ class _ReviewComposerState extends State<ReviewComposer> {
             Text(
               '${_rating.toStringAsFixed(0)} / 5',
               style: const TextStyle(
-                color: Color(0xFF0F172A),
+                color: ShopWiseColors.textPrimary,
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
               ),
@@ -171,27 +167,23 @@ class _ReviewComposerState extends State<ReviewComposer> {
             decoration: InputDecoration(
               hintText: 'What did you like? What could be better?',
               hintStyle: const TextStyle(
-                color: Color(0xFF94A3B8),
+                color: ShopWiseColors.textMuted,
                 fontSize: 13,
               ),
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
+              fillColor: ShopWiseColors.surfaceSoft,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0xFFE2E8F0),
-                ),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: Color(0xFFE2E8F0),
-                ),
+                borderSide: const BorderSide(color: ShopWiseColors.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
-                  color: Color(0xFF10B981),
+                  color: ShopWiseColors.emerald,
                   width: 1.5,
                 ),
               ),
@@ -204,8 +196,8 @@ class _ReviewComposerState extends State<ReviewComposer> {
             child: FilledButton(
               onPressed: _isSaving ? null : _save,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                disabledBackgroundColor: const Color(0xFF94A3B8),
+                backgroundColor: ShopWiseColors.emerald,
+                disabledBackgroundColor: ShopWiseColors.textMuted,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -216,14 +208,12 @@ class _ReviewComposerState extends State<ReviewComposer> {
                       height: 19,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: ShopWiseColors.surface,
                       ),
                     )
                   : Text(
                       _isEditing ? 'Update Review' : 'Publish Review',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
             ),
           ),

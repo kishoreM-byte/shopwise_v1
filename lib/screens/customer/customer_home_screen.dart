@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/design_tokens.dart';
 import 'widgets/home/home_saved_products.dart';
 import 'widgets/home/home_section_title.dart';
+import 'widgets/compare/compare_screen.dart';
 
 import '../../services/customer/wishlist_service.dart';
 import '../../services/customer/compare_service.dart';
@@ -19,6 +20,7 @@ import 'smart_score_screen.dart';
 import 'smart_trip_screen.dart';
 import 'notifications_screen.dart';
 import 'my_enquiries_screen.dart';
+import 'my_orders_screen.dart';
 
 class _PremiumPressable extends StatefulWidget {
   const _PremiumPressable({required this.child, required this.onTap});
@@ -88,11 +90,10 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
   final WishlistService _wishlistService = WishlistService();
   final CompareService _compareService = CompareService();
 
+  late Stream<Set<String>> _wishlistIdsStream;
+
   Set<String> _wishlistIds = <String>{};
   Set<String> _compareIds = <String>{};
-
-  Stream<Set<String>> get _wishlistStream =>
-      _wishlistService.watchWishlistIds();
 
   Stream<Set<String>> get _compareStream => _compareService.watchCompareIds();
 
@@ -103,6 +104,12 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     'Wishlist',
     'Profile',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _wishlistIdsStream = _wishlistService.watchWishlistIds();
+  }
 
   @override
   void dispose() {
@@ -161,9 +168,28 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       ),
 
       body: StreamBuilder<Set<String>>(
-        stream: _wishlistStream,
+        stream: _wishlistIdsStream,
         builder: (context, wishlistSnapshot) {
-          final wishlistIds = wishlistSnapshot.data ?? <String>{};
+          final wishlistIds = wishlistSnapshot.data ?? _wishlistIds;
+
+          if (_currentIndex == 3 && wishlistSnapshot.hasError) {
+            return _wishlistLoadState(
+              title: 'Wishlist unavailable',
+              subtitle: 'Check your connection, then try again.',
+              actionLabel: 'Try again',
+              onAction: _retryWishlistStream,
+            );
+          }
+
+          if (_currentIndex == 3 &&
+              wishlistSnapshot.connectionState == ConnectionState.waiting &&
+              !wishlistSnapshot.hasData) {
+            return _wishlistLoadState(
+              title: 'Loading your wishlist',
+              subtitle: 'Your saved products will appear here.',
+              isLoading: true,
+            );
+          }
 
           return StreamBuilder<Set<String>>(
             stream: _compareStream,
@@ -216,31 +242,81 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _onNavigationTap,
-
-        destinations: const [
+        height: 72,
+        backgroundColor: ShopWiseColors.surface,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: ShopWiseColors.emeraldSoft,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(ShopWiseRadius.medium),
+        ),
+        elevation: ShopWiseElevation.subtle,
+        shadowColor: ShopWiseColors.textPrimary.withValues(alpha: 0.08),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        animationDuration: ShopWiseMotion.fast,
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(
+              Icons.home_outlined,
+              color: _currentIndex == 0
+                  ? ShopWiseColors.emeraldDeep
+                  : ShopWiseColors.textMuted,
+            ),
+            selectedIcon: const Icon(
+              Icons.home_rounded,
+              color: ShopWiseColors.emeraldDeep,
+            ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search),
+            icon: Icon(
+              Icons.search_rounded,
+              color: _currentIndex == 1
+                  ? ShopWiseColors.search
+                  : ShopWiseColors.textMuted,
+            ),
+            selectedIcon: const Icon(
+              Icons.search_rounded,
+              color: ShopWiseColors.search,
+            ),
             label: 'Search',
           ),
           NavigationDestination(
-            icon: Icon(Icons.compare_arrows_outlined),
-            selectedIcon: Icon(Icons.compare_arrows),
+            icon: Icon(
+              Icons.compare_arrows_rounded,
+              color: _currentIndex == 2
+                  ? ShopWiseColors.compare
+                  : ShopWiseColors.textMuted,
+            ),
+            selectedIcon: const Icon(
+              Icons.compare_arrows_rounded,
+              color: ShopWiseColors.compare,
+            ),
             label: 'Compare',
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            selectedIcon: Icon(Icons.favorite),
+            icon: Icon(
+              Icons.favorite_border_rounded,
+              color: _currentIndex == 3
+                  ? ShopWiseColors.wishlist
+                  : ShopWiseColors.textMuted,
+            ),
+            selectedIcon: const Icon(
+              Icons.favorite_rounded,
+              color: ShopWiseColors.wishlist,
+            ),
             label: 'Wishlist',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person_outline_rounded,
+              color: _currentIndex == 4
+                  ? ShopWiseColors.olive
+                  : ShopWiseColors.textMuted,
+            ),
+            selectedIcon: const Icon(
+              Icons.person_rounded,
+              color: ShopWiseColors.olive,
+            ),
             label: 'Profile',
           ),
         ],
@@ -279,22 +355,22 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildWelcomeSection(),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             _buildSearchBar(),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
             _buildSectionTitle(title: 'Quick Actions', actionText: null),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _buildQuickActions(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 26),
             _buildSectionTitle(title: 'Explore ShopWise', actionText: null),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             _buildFeatureGrid(),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -330,6 +406,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         });
       },
       onEnquiries: () => _openFeature(const MyEnquiriesScreen()),
+      onOrders: () => _openFeature(const MyOrdersScreen()),
     );
   }
 
@@ -340,6 +417,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       onSmartScore: () => _openFeature(const SmartScoreScreen()),
       onSmartTrip: () => _openFeature(const SmartTripScreen()),
       onEnquiries: () => _openFeature(const MyEnquiriesScreen()),
+      onOrders: () => _openFeature(const MyOrdersScreen()),
     );
   }
 
@@ -379,6 +457,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
           _availableOnly = false;
         });
       },
+      onClearSearchAndFilters: () {
+        _searchController.clear();
+        setState(() {
+          _searchQuery = '';
+          _selectedCategory = null;
+          _minPrice = null;
+          _maxPrice = null;
+          _availableOnly = false;
+        });
+      },
     );
   }
 
@@ -394,6 +482,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       emptySubtitle: 'Add products using Compare to see them here.',
       compareIds: _compareIds,
       wishlistIds: _wishlistIds,
+      onCompareNow: _openCompareScreen,
     );
   }
 
@@ -405,7 +494,70 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
       emptySubtitle: 'Products you save will appear here.',
       compareIds: _compareIds,
       wishlistIds: _wishlistIds,
+      onRemoveWishlist: _removeWishlistProduct,
     );
+  }
+
+  Widget _wishlistLoadState({
+    required String title,
+    required String subtitle,
+    String? actionLabel,
+    VoidCallback? onAction,
+    bool isLoading = false,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              const CircularProgressIndicator(color: ShopWiseColors.emerald)
+            else
+              const Icon(
+                Icons.cloud_off_rounded,
+                size: 42,
+                color: ShopWiseColors.emerald,
+              ),
+            const SizedBox(height: 16),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: ShopWiseColors.textSecondary,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: onAction,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(actionLabel),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _retryWishlistStream() {
+    setState(() {
+      _wishlistIdsStream = _wishlistService.watchWishlistIds();
+    });
+  }
+
+  Future<void> _removeWishlistProduct(String productId) async {
+    try {
+      await _wishlistService.remove(productId);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update your wishlist: $error')),
+      );
+    }
   }
 
   Widget _buildSectionTitle({required String title, String? actionText}) {
@@ -418,6 +570,21 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
 
   void _openFeature(Widget screen) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
+  void _openCompareScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StreamBuilder<Set<String>>(
+          stream: _compareStream,
+          initialData: _compareIds,
+          builder: (context, snapshot) {
+            return CompareScreen(compareIds: snapshot.data ?? _compareIds);
+          },
+        ),
+      ),
+    );
   }
 
   void _showComingSoon() {

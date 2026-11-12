@@ -5,6 +5,17 @@ import '../../../../models/shop.dart';
 import '../../../../theme/design_tokens.dart';
 import '../../product_details_screen.dart';
 
+enum ProductSortOption {
+  recommended('Recommended'),
+  priceLowToHigh('Price: low to high'),
+  priceHighToLow('Price: high to low'),
+  rating('Top rated');
+
+  const ProductSortOption(this.label);
+
+  final String label;
+}
+
 class HomeProductResults extends StatelessWidget {
   const HomeProductResults({
     super.key,
@@ -15,6 +26,9 @@ class HomeProductResults extends StatelessWidget {
     required this.minPrice,
     required this.maxPrice,
     required this.availableOnly,
+    required this.sortOption,
+    required this.onSortChanged,
+    required this.onClearSearchAndFilters,
     required this.onEmptyState,
   });
 
@@ -25,6 +39,9 @@ class HomeProductResults extends StatelessWidget {
   final double? minPrice;
   final double? maxPrice;
   final bool availableOnly;
+  final ProductSortOption sortOption;
+  final ValueChanged<ProductSortOption> onSortChanged;
+  final VoidCallback onClearSearchAndFilters;
 
   final Widget Function({
     required IconData icon,
@@ -36,14 +53,15 @@ class HomeProductResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = searchQuery.trim().toLowerCase();
+    final normalizedCategory = selectedCategory?.trim().toLowerCase();
 
     final filteredProducts = products.where((product) {
       final shop = shopsById[product.shopId];
 
-      final productName = product.name.toLowerCase();
-      final category = product.category.toLowerCase();
-      final description = product.description.toLowerCase();
-      final shopName = shop?.name.toLowerCase() ?? '';
+      final productName = product.name.trim().toLowerCase();
+      final category = product.category.trim().toLowerCase();
+      final description = product.description.trim().toLowerCase();
+      final shopName = shop?.name.trim().toLowerCase() ?? '';
 
       final matchesQuery =
           query.isEmpty ||
@@ -53,8 +71,8 @@ class HomeProductResults extends StatelessWidget {
           shopName.contains(query);
 
       final matchesCategory =
-          selectedCategory == null ||
-          product.category.toLowerCase() == selectedCategory!.toLowerCase();
+          normalizedCategory == null ||
+          product.category.trim().toLowerCase() == normalizedCategory;
 
       final matchesMinPrice = minPrice == null || product.price >= minPrice!;
 
@@ -70,46 +88,169 @@ class HomeProductResults extends StatelessWidget {
           matchesAvailability;
     }).toList();
 
-    if (filteredProducts.isEmpty) {
-      final hasFilters =
-          selectedCategory != null ||
-          minPrice != null ||
-          maxPrice != null ||
-          availableOnly;
+    final indexedProducts = filteredProducts.asMap().entries.toList();
+    indexedProducts.sort((a, b) {
+      final comparison = _compareProducts(a.value, b.value, sortOption);
+      return comparison == 0 ? a.key.compareTo(b.key) : comparison;
+    });
+    final sortedProducts = indexedProducts.map((entry) => entry.value).toList();
+    final hasActiveSearchOrFilters =
+        query.isNotEmpty ||
+        (selectedCategory?.trim().isNotEmpty ?? false) ||
+        minPrice != null ||
+        maxPrice != null ||
+        availableOnly;
 
-      return onEmptyState(
-        icon: Icons.search_off_rounded,
-        title: query.isEmpty && !hasFilters
-            ? 'No products available'
-            : 'No matching products',
-        subtitle: query.isEmpty && !hasFilters
-            ? 'Products added by shop owners will appear here.'
-            : 'Try changing your search or filters.',
-      );
-    }
-
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 24),
-      itemCount: filteredProducts.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final product = filteredProducts[index];
-        final shop = shopsById[product.shopId];
-
-        return _ProductResultCard(
-          product: product,
-          shop: shop,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ProductDetailsScreen(product: product),
+    return Column(
+      children: [
+        _ResultsToolbar(
+          resultCount: sortedProducts.length,
+          sortOption: sortOption,
+          onSortChanged: onSortChanged,
+        ),
+        if (sortedProducts.isEmpty) ...[
+          Expanded(
+            child: onEmptyState(
+              icon: Icons.search_off_rounded,
+              title: hasActiveSearchOrFilters
+                  ? 'No matching products'
+                  : 'No products available',
+              subtitle: hasActiveSearchOrFilters
+                  ? 'Try changing your search or filters.'
+                  : 'Products added by shop owners will appear here.',
+            ),
+          ),
+          if (hasActiveSearchOrFilters)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TextButton.icon(
+                onPressed: onClearSearchAndFilters,
+                icon: const Icon(Icons.close_rounded),
+                label: const Text('Clear search and filters'),
               ),
-            );
-          },
-        );
-      },
+            ),
+        ] else
+          Expanded(
+            child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 24),
+              itemCount: sortedProducts.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final product = sortedProducts[index];
+                final shop = shopsById[product.shopId];
+
+                return _ProductResultCard(
+                  product: product,
+                  shop: shop,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailsScreen(product: product),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  int _compareProducts(
+    Product first,
+    Product second,
+    ProductSortOption option,
+  ) {
+    switch (option) {
+      case ProductSortOption.priceLowToHigh:
+        return first.price.compareTo(second.price);
+      case ProductSortOption.priceHighToLow:
+        return second.price.compareTo(first.price);
+      case ProductSortOption.rating:
+        final firstHasRating = first.rating > 0 && first.reviewCount > 0;
+        final secondHasRating = second.rating > 0 && second.reviewCount > 0;
+        if (firstHasRating != secondHasRating) {
+          return firstHasRating ? -1 : 1;
+        }
+        return firstHasRating ? second.rating.compareTo(first.rating) : 0;
+      case ProductSortOption.recommended:
+        return 0;
+    }
+  }
+}
+
+class _ResultsToolbar extends StatelessWidget {
+  const _ResultsToolbar({
+    required this.resultCount,
+    required this.sortOption,
+    required this.onSortChanged,
+  });
+
+  final int resultCount;
+  final ProductSortOption sortOption;
+  final ValueChanged<ProductSortOption> onSortChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '$resultCount ${resultCount == 1 ? 'product' : 'products'}',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: ShopWiseColors.textSecondary,
+              ),
+            ),
+          ),
+          PopupMenuButton<ProductSortOption>(
+            tooltip: 'Sort products',
+            onSelected: onSortChanged,
+            itemBuilder: (context) => ProductSortOption.values
+                .map(
+                  (option) => PopupMenuItem<ProductSortOption>(
+                    value: option,
+                    child: Text(option.label),
+                  ),
+                )
+                .toList(),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48, maxWidth: 190),
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+              decoration: BoxDecoration(
+                color: ShopWiseColors.surface,
+                borderRadius: BorderRadius.circular(ShopWiseRadius.pill),
+                border: Border.all(color: ShopWiseColors.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.swap_vert_rounded,
+                    size: 18,
+                    color: ShopWiseColors.emeraldDeep,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      sortOption.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: ShopWiseColors.emeraldDeep,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -151,14 +292,19 @@ class _ProductResultCard extends StatelessWidget {
 
     return Material(
       color: ShopWiseColors.surface,
-      borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+      elevation: ShopWiseElevation.subtle / 2,
+      shadowColor: ShopWiseColors.textPrimary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
+        side: const BorderSide(color: ShopWiseColors.border),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         splashColor: ShopWiseColors.emeraldSoft,
         highlightColor: ShopWiseColors.emeraldSoft.withValues(alpha: 0.35),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -171,70 +317,72 @@ class _ProductResultCard extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: SizedBox(
-                  height: 142,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name.trim().isNotEmpty
-                            ? product.name.trim()
-                            : 'Unnamed product',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.25,
-                          fontWeight: FontWeight.w800,
-                          color: ShopWiseColors.textPrimary,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name.trim().isNotEmpty
+                          ? product.name.trim()
+                          : 'Unnamed product',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.3,
+                        fontWeight: FontWeight.w700,
+                        color: ShopWiseColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_outlined,
+                          size: 14,
+                          color: ShopWiseColors.textMuted,
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.storefront_outlined,
-                            size: 14,
-                            color: ShopWiseColors.textMuted,
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              shopName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: ShopWiseColors.textSecondary,
-                              ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            shopName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: ShopWiseColors.textSecondary,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          _CategoryPill(label: product.category),
-                          if (hasRating) ...[
-                            const SizedBox(width: 7),
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: ShopWiseColors.warning,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              product.rating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: ShopWiseColors.textPrimary,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _CategoryPill(label: product.category),
+                        if (hasRating)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 14,
+                                color: ShopWiseColors.warning,
                               ),
-                            ),
-                            const SizedBox(width: 3),
-                            Flexible(
-                              child: Text(
+                              const SizedBox(width: 3),
+                              Text(
+                                product.rating.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: ShopWiseColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
                                 '(${product.reviewCount})',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -244,61 +392,67 @@ class _ProductResultCard extends StatelessWidget {
                                   color: ShopWiseColors.textMuted,
                                 ),
                               ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      const Spacer(),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 3,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          '₹${product.price.toStringAsFixed(0)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                            color: ShopWiseColors.emerald,
+                          ),
+                        ),
+                        if (hasDiscount)
                           Text(
-                            '₹${product.price.toStringAsFixed(0)}',
+                            '₹${product.originalPrice!.toStringAsFixed(0)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                              color: ShopWiseColors.emerald,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: ShopWiseColors.textMuted,
+                              decoration: TextDecoration.lineThrough,
                             ),
                           ),
-                          if (hasDiscount) ...[
-                            const SizedBox(width: 7),
-                            Text(
-                              '₹${product.originalPrice!.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: ShopWiseColors.textMuted,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ],
-                          const Spacer(),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 21,
-                            color: ShopWiseColors.textMuted,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(
-                            available
-                                ? Icons.check_circle_rounded
-                                : Icons.remove_circle_outline_rounded,
-                            size: 14,
-                            color: available
-                                ? ShopWiseColors.success
-                                : ShopWiseColors.textMuted,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 21,
+                          color: ShopWiseColors.textMuted,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Icon(
+                          available
+                              ? Icons.check_circle_rounded
+                              : Icons.remove_circle_outline_rounded,
+                          size: 14,
+                          color: available
+                              ? ShopWiseColors.success
+                              : ShopWiseColors.textMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
                             available
                                 ? product.stock <= 5
                                       ? 'Only ${product.stock} left'
                                       : 'Available'
                                 : 'Currently unavailable',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
@@ -307,25 +461,23 @@ class _ProductResultCard extends StatelessWidget {
                                   : ShopWiseColors.textMuted,
                             ),
                           ),
-                          if (hasOffer) ...[
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                product.offerText!.trim(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: ShopWiseColors.search,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                        ),
+                      ],
+                    ),
+                    if (hasOffer) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        product.offerText!.trim(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: ShopWiseColors.olive,
+                        ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -394,7 +546,7 @@ class _ProductImage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
-                  color: ShopWiseColors.emerald,
+                  color: ShopWiseColors.search,
                   borderRadius: BorderRadius.circular(ShopWiseRadius.pill),
                 ),
                 child: Text(

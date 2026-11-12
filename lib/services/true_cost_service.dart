@@ -11,11 +11,9 @@ class TrueCostResult {
     required this.installationCost,
   });
 
-  double get additionalCost =>
-      travelCost + deliveryCost + installationCost;
+  double get additionalCost => travelCost + deliveryCost + installationCost;
 
-  double get totalCost =>
-      productPrice + additionalCost;
+  double get totalCost => productPrice + additionalCost;
 }
 
 class TrueCostService {

@@ -10,6 +10,7 @@ class HomeFeatureGrid extends StatelessWidget {
     required this.onSmartScore,
     required this.onSmartTrip,
     required this.onEnquiries,
+    required this.onOrders,
   });
 
   final VoidCallback onNearbyShops;
@@ -17,10 +18,10 @@ class HomeFeatureGrid extends StatelessWidget {
   final VoidCallback onSmartScore;
   final VoidCallback onSmartTrip;
   final VoidCallback onEnquiries;
+  final VoidCallback onOrders;
 
   @override
   Widget build(BuildContext context) {
-
     return Column(
       children: [
         Row(
@@ -30,7 +31,7 @@ class HomeFeatureGrid extends StatelessWidget {
                 icon: Icons.storefront_rounded,
                 title: 'Nearby Shops',
                 subtitle: 'Find shops around you',
-                accent: ShopWiseColors.trip,
+                accent: ShopWiseColors.olive,
                 onTap: onNearbyShops,
               ),
             ),
@@ -40,7 +41,7 @@ class HomeFeatureGrid extends StatelessWidget {
                 icon: Icons.local_offer_rounded,
                 title: 'Best Deals',
                 subtitle: 'Discover active offers',
-                accent: ShopWiseColors.warning,
+                accent: ShopWiseColors.search,
                 onTap: onBestDeals,
               ),
             ),
@@ -54,7 +55,7 @@ class HomeFeatureGrid extends StatelessWidget {
                 icon: Icons.auto_awesome_rounded,
                 title: 'Smart Score',
                 subtitle: 'Rank products intelligently',
-                accent: ShopWiseColors.smart,
+                accent: ShopWiseColors.emerald,
                 onTap: onSmartScore,
               ),
             ),
@@ -79,9 +80,17 @@ class HomeFeatureGrid extends StatelessWidget {
           wide: true,
           onTap: onEnquiries,
         ),
+        const SizedBox(height: 12),
+        _FeatureCard(
+          icon: Icons.shopping_bag_rounded,
+          title: 'My Orders',
+          subtitle: 'Track your purchases',
+          accent: ShopWiseColors.emerald,
+          wide: true,
+          onTap: onOrders,
+        ),
       ],
     );
-  
   }
 }
 
@@ -111,7 +120,7 @@ class _FeatureCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: ShopWiseColors.surface,
             borderRadius: BorderRadius.circular(ShopWiseRadius.large),
@@ -120,19 +129,15 @@ class _FeatureCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(ShopWiseRadius.medium),
                 ),
-                child: Icon(
-                  icon,
-                  color: accent,
-                  size: 23,
-                ),
+                child: Icon(icon, color: accent, size: 21),
               ),
-              const SizedBox(width: 13),
+              const SizedBox(width: 11),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

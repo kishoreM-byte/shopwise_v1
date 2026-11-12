@@ -4,8 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/enquiry.dart';
 
 class EnquiryService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  EnquiryService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  final Set<String> _pendingEnquiryDecisions = <String>{};
 
   CollectionReference<Map<String, dynamic>> get _enquiries {
     return _firestore.collection('enquiries');
@@ -93,35 +98,74 @@ class EnquiryService {
       throw Exception('Invalid enquiry.');
     }
 
+    if (!_pendingEnquiryDecisions.add(normalizedEnquiryId)) {
+      throw Exception('This enquiry has already been processed.');
+    }
+
     final DocumentReference<Map<String, dynamic>> enquiryRef = _enquiries.doc(
       normalizedEnquiryId,
     );
 
-    final DocumentSnapshot<Map<String, dynamic>> document = await enquiryRef
-        .get();
+    final String notificationType = normalizedStatus == 'accepted'
+        ? 'enquiry_accepted'
+        : 'enquiry_rejected';
 
-    if (!document.exists || document.data() == null) {
-      throw Exception('Enquiry no longer exists.');
+    final String notificationId = [
+      normalizedEnquiryId,
+      normalizedStatus,
+    ].join('_');
+
+    final DocumentReference<Map<String, dynamic>> notificationRef = _firestore
+        .collection('notifications')
+        .doc(notificationId);
+
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final document = await transaction.get(enquiryRef);
+
+        if (!document.exists || document.data() == null) {
+          throw Exception('Enquiry no longer exists.');
+        }
+
+        final data = document.data()!;
+
+        if (data['ownerId'] != user.uid) {
+          throw Exception('You are not authorized to update this enquiry.');
+        }
+
+        if ((data['status'] as String? ?? 'pending') != 'pending') {
+          throw Exception('This enquiry has already been processed.');
+        }
+
+        transaction.update(enquiryRef, {
+          'status': normalizedStatus,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        transaction.set(notificationRef, {
+          'id': notificationId,
+          'userId': data['customerId'],
+          'type': notificationType,
+          'title': normalizedStatus == 'accepted'
+              ? 'Enquiry accepted'
+              : 'Enquiry rejected',
+          'message': normalizedStatus == 'accepted'
+              ? "Your enquiry for ${data['productName'] ?? 'this product'} has been accepted by the shop."
+              : 'Your enquiry for ${data['productName'] ?? 'this product'} has been declined by the shop.',
+          'productId': data['productId'],
+          'shopId': data['shopId'],
+          'enquiryId': normalizedEnquiryId,
+          'isRead': false,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      });
+    } on FirebaseException catch (e) {
+      throw Exception(
+        'Firestore ${e.code}: ${e.message ?? 'Unknown Firestore error.'}',
+      );
+    } finally {
+      _pendingEnquiryDecisions.remove(normalizedEnquiryId);
     }
-
-    final Map<String, dynamic> data = document.data()!;
-
-    if (data['ownerId'] != user.uid) {
-      throw Exception('You are not authorized to update this enquiry.');
-    }
-
-    if ((data['status'] as String? ?? 'pending') != 'pending') {
-      throw Exception('This enquiry has already been processed.');
-    }
-
-    final WriteBatch batch = _firestore.batch();
-
-    batch.update(enquiryRef, {
-      'status': normalizedStatus,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-
-    await batch.commit();
   }
 
   Stream<List<ProductEnquiry>> watchShopOwnerEnquiries() {

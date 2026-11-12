@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import '../../theme/design_tokens.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../models/shop.dart';
@@ -83,7 +83,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: ShopWiseColors.background,
       appBar: AppBar(
         title: const Text(
           'Nearby Shops',
@@ -131,13 +131,17 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF10B981)],
+          colors: [ShopWiseColors.olive, ShopWiseColors.emerald],
         ),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         children: [
-          const Icon(Icons.near_me_rounded, color: Colors.white, size: 28),
+          const Icon(
+            Icons.near_me_rounded,
+            color: ShopWiseColors.surface,
+            size: 28,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -146,7 +150,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                 const Text(
                   'Shops around you',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: ShopWiseColors.surface,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
@@ -156,14 +160,20 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                   _loadingLocation
                       ? 'Finding your location...'
                       : _locationError ?? 'Sorted by road proximity',
-                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  style: const TextStyle(
+                    color: ShopWiseColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
           IconButton(
             onPressed: _loadLocation,
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: ShopWiseColors.surface,
+            ),
           ),
         ],
       ),
@@ -176,10 +186,10 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
-      color: Colors.white,
+      color: ShopWiseColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFE2E8F0)),
+        side: const BorderSide(color: ShopWiseColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -189,7 +199,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
               width: 62,
               height: 62,
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: .10),
+                color: ShopWiseColors.emerald.withValues(alpha: .10),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: shop.imageUrl != null && shop.imageUrl!.isNotEmpty
@@ -200,14 +210,14 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => const Icon(
                           Icons.storefront_rounded,
-                          color: Color(0xFF10B981),
+                          color: ShopWiseColors.emerald,
                           size: 28,
                         ),
                       ),
                     )
                   : const Icon(
                       Icons.storefront_rounded,
-                      color: Color(0xFF10B981),
+                      color: ShopWiseColors.emerald,
                       size: 28,
                     ),
             ),
@@ -223,7 +233,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: ShopWiseColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -231,7 +241,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                     shop.category,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF64748B),
+                      color: ShopWiseColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -256,7 +266,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
                           '${distance.toStringAsFixed(1)} km away',
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF64748B),
+                            color: ShopWiseColors.textSecondary,
                           ),
                         ),
                     ],
@@ -268,8 +278,8 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
               shop.isOpen ? Icons.circle : Icons.circle_outlined,
               size: 11,
               color: shop.isOpen
-                  ? const Color(0xFF10B981)
-                  : const Color(0xFF94A3B8),
+                  ? ShopWiseColors.emerald
+                  : ShopWiseColors.textMuted,
             ),
           ],
         ),
@@ -285,7 +295,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
           Icon(
             Icons.store_mall_directory_outlined,
             size: 54,
-            color: Color(0xFF94A3B8),
+            color: ShopWiseColors.textMuted,
           ),
           SizedBox(height: 16),
           Text(
@@ -296,7 +306,7 @@ class _NearbyShopsScreenState extends State<NearbyShopsScreen> {
           Text(
             'Shop owners will appear here when their shops are published.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: ShopWiseColors.textSecondary),
           ),
         ],
       ),

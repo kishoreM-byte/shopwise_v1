@@ -1,17 +1,22 @@
-
 import 'package:flutter/material.dart';
 
 import '../../models/enquiry.dart';
 import '../../services/customer/enquiry_service.dart';
+import '../../services/customer/order_service.dart';
+import '../../services/product_service.dart';
+import '../../services/shop_service.dart';
+import '../../theme/design_tokens.dart';
+import 'order_details_screen.dart';
+import 'purchase_checkout_screen.dart';
 
 class MyEnquiriesScreen extends StatelessWidget {
   const MyEnquiriesScreen({super.key});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color background = Color(0xFFF8FAFC);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color border = Color(0xFFE2E8F0);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color background = ShopWiseColors.background;
+  static const Color textPrimary = ShopWiseColors.textPrimary;
+  static const Color textSecondary = ShopWiseColors.textSecondary;
+  static const Color border = ShopWiseColors.border;
 
   @override
   Widget build(BuildContext context) {
@@ -23,10 +28,7 @@ class MyEnquiriesScreen extends StatelessWidget {
         foregroundColor: textPrimary,
         title: const Text(
           'My Enquiries',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
         ),
       ),
       body: StreamBuilder<List<ProductEnquiry>>(
@@ -48,14 +50,14 @@ class MyEnquiriesScreen extends StatelessWidget {
             return _emptyState();
           }
 
-          final pending =
-              enquiries.where((e) => e.status == 'pending').length;
-          final accepted =
-              enquiries.where((e) => e.status == 'accepted').length;
+          final pending = enquiries.where((e) => e.status == 'pending').length;
+          final accepted = enquiries
+              .where((e) => e.status == 'accepted')
+              .length;
 
           return ListView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             children: [
               _overview(
                 total: enquiries.length,
@@ -87,12 +89,9 @@ class MyEnquiriesScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-          ],
+          colors: [ShopWiseColors.emeraldDeep, ShopWiseColors.olive],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.xLarge),
       ),
       child: Row(
         children: [
@@ -128,7 +127,7 @@ class MyEnquiriesScreen extends StatelessWidget {
     return Container(
       width: 1,
       height: 42,
-      color: Colors.white.withValues(alpha: 0.12),
+      color: ShopWiseColors.surface.withValues(alpha: 0.12),
     );
   }
 
@@ -139,16 +138,12 @@ class MyEnquiriesScreen extends StatelessWidget {
   }) {
     return Column(
       children: [
-        Icon(
-          icon,
-          color: const Color(0xFF34D399),
-          size: 19,
-        ),
+        Icon(icon, color: ShopWiseColors.oliveSoft, size: 19),
         const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: ShopWiseColors.surface,
             fontSize: 21,
             fontWeight: FontWeight.w900,
           ),
@@ -157,7 +152,7 @@ class MyEnquiriesScreen extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF94A3B8),
+            color: ShopWiseColors.textMuted,
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
@@ -166,22 +161,19 @@ class MyEnquiriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _enquiryCard(
-    BuildContext context,
-    ProductEnquiry enquiry,
-  ) {
+  Widget _enquiryCard(BuildContext context, ProductEnquiry enquiry) {
     final status = enquiry.status.toLowerCase();
 
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      color: ShopWiseColors.surface,
+      borderRadius: BorderRadius.circular(ShopWiseRadius.large),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
         onTap: () => _showDetails(context, enquiry),
         child: Container(
           padding: const EdgeInsets.all(17),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(ShopWiseRadius.large),
             border: Border.all(color: border),
           ),
           child: Column(
@@ -198,7 +190,7 @@ class MyEnquiriesScreen extends StatelessWidget {
                     ),
                     child: const Icon(
                       Icons.inventory_2_rounded,
-                      color: Color(0xFF059669),
+                      color: ShopWiseColors.emerald,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -237,7 +229,7 @@ class MyEnquiriesScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: ShopWiseColors.surfaceSoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -272,23 +264,236 @@ class MyEnquiriesScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _statusMessage(
                   icon: Icons.check_circle_rounded,
-                  text: 'The shop has accepted your enquiry.',
-                  foreground: const Color(0xFF047857),
-                  background: const Color(0xFFECFDF5),
+                  text: 'Accepted — Ready to buy',
+                  foreground: ShopWiseColors.emeraldDeep,
+                  background: ShopWiseColors.emeraldSoft,
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: FilledButton.icon(
+                    onPressed: () => _buyNow(context, enquiry),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: ShopWiseColors.surface,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                    label: Text(
+                      enquiry.orderId?.trim().isNotEmpty == true
+                          ? 'Order placed'
+                          : 'Buy Now',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
                 ),
               ] else if (status == 'rejected') ...[
                 const SizedBox(height: 12),
                 _statusMessage(
                   icon: Icons.cancel_rounded,
                   text: 'The shop has declined this enquiry.',
-                  foreground: const Color(0xFFB91C1C),
-                  background: const Color(0xFFFEF2F2),
+                  foreground: ShopWiseColors.error,
+                  background: ShopWiseColors.error.withValues(alpha: 0.08),
                 ),
               ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _buyNow(BuildContext context, ProductEnquiry enquiry) async {
+    final orderService = OrderService();
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: primary)),
+    );
+
+    try {
+      final orderId = enquiry.orderId?.trim();
+
+      if (orderId != null && orderId.isNotEmpty) {
+        final existing = await orderService.getOrderById(orderId);
+
+        if (context.mounted) {
+          Navigator.pop(context);
+
+          if (existing != null) {
+            await _showExistingOrder(context, existing);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Order information could not be loaded. Please try again.',
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+        return;
+      }
+
+      final alreadyPlaced = await orderService.hasOrderForEnquiry(enquiry.id);
+
+      if (alreadyPlaced) {
+        final existing = await orderService.getOrderById(enquiry.id);
+
+        if (context.mounted) {
+          Navigator.pop(context);
+
+          if (existing != null) {
+            await _showExistingOrder(context, existing);
+          }
+        }
+        return;
+      }
+
+      final product = await ProductService().getProduct(enquiry.productId);
+      final shop = await ShopService().getShopById(enquiry.shopId);
+
+      if (!context.mounted) return;
+
+      Navigator.pop(context);
+
+      if (product == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This product is no longer available.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (shop == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This shop is no longer available.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      if (!product.isAvailable || product.stock < enquiry.quantity) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              product.stock <= 0
+                  ? 'This product is currently unavailable.'
+                  : 'Only ${product.stock} unit${product.stock == 1 ? '' : 's'} available.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PurchaseCheckoutScreen(
+            product: product,
+            shop: shop,
+            enquiry: enquiry,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      Navigator.pop(context);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showExistingOrder(BuildContext context, dynamic order) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
+            decoration: const BoxDecoration(
+              color: ShopWiseColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: ShopWiseColors.emerald,
+                  size: 54,
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Order placed',
+                  style: TextStyle(
+                    color: textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Order #${order.id}',
+                  style: const TextStyle(
+                    color: textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => OrderDetailsScreen(order: order),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'View Order',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -299,10 +504,7 @@ class MyEnquiriesScreen extends StatelessWidget {
     required Color background,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(12),
@@ -333,29 +535,26 @@ class MyEnquiriesScreen extends StatelessWidget {
 
     switch (status) {
       case 'accepted':
-        foreground = const Color(0xFF047857);
-        background = const Color(0xFFECFDF5);
+        foreground = ShopWiseColors.emeraldDeep;
+        background = ShopWiseColors.emeraldSoft;
         label = 'ACCEPTED';
         break;
       case 'rejected':
-        foreground = const Color(0xFFB91C1C);
-        background = const Color(0xFFFEF2F2);
+        foreground = ShopWiseColors.error;
+        background = ShopWiseColors.error.withValues(alpha: 0.08);
         label = 'REJECTED';
         break;
       default:
-        foreground = const Color(0xFFC2410C);
-        background = const Color(0xFFFFF7ED);
+        foreground = ShopWiseColors.enquiries;
+        background = ShopWiseColors.enquiries.withValues(alpha: 0.12);
         label = 'PENDING';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(ShopWiseRadius.large),
       ),
       child: Text(
         label,
@@ -369,10 +568,7 @@ class MyEnquiriesScreen extends StatelessWidget {
     );
   }
 
-  void _showDetails(
-    BuildContext context,
-    ProductEnquiry enquiry,
-  ) {
+  void _showDetails(BuildContext context, ProductEnquiry enquiry) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -381,10 +577,8 @@ class MyEnquiriesScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(28),
-            ),
+            color: ShopWiseColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SafeArea(
             child: Column(
@@ -396,7 +590,7 @@ class MyEnquiriesScreen extends StatelessWidget {
                     width: 38,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: ShopWiseColors.border,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -468,11 +662,7 @@ class MyEnquiriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _detail(
-    IconData icon,
-    String label,
-    String value,
-  ) {
+  Widget _detail(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -520,11 +710,7 @@ class MyEnquiriesScreen extends StatelessWidget {
                 color: primary.withValues(alpha: 0.10),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.forum_outlined,
-                color: primary,
-                size: 34,
-              ),
+              child: const Icon(Icons.forum_outlined, color: primary, size: 34),
             ),
             const SizedBox(height: 18),
             const Text(
@@ -539,11 +725,7 @@ class MyEnquiriesScreen extends StatelessWidget {
             const Text(
               'When you enquire about a product, your enquiry and its status will appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: textSecondary,
-                fontSize: 12,
-                height: 1.5,
-              ),
+              style: TextStyle(color: textSecondary, fontSize: 12, height: 1.5),
             ),
           ],
         ),
@@ -558,10 +740,7 @@ class MyEnquiriesScreen extends StatelessWidget {
         child: Text(
           'Unable to load your enquiries.\nPlease try again later.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: textSecondary,
-            fontSize: 13,
-          ),
+          style: TextStyle(color: textSecondary, fontSize: 13),
         ),
       ),
     );

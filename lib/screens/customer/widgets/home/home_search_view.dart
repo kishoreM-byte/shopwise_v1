@@ -22,6 +22,7 @@ class HomeSearchView extends StatefulWidget {
     required this.onSearchChanged,
     required this.onFiltersChanged,
     required this.onResetFilters,
+    required this.onClearSearchAndFilters,
   });
 
   final TextEditingController searchController;
@@ -43,6 +44,7 @@ class HomeSearchView extends StatefulWidget {
   onFiltersChanged;
 
   final VoidCallback onResetFilters;
+  final VoidCallback onClearSearchAndFilters;
 
   @override
   State<HomeSearchView> createState() => _HomeSearchViewState();
@@ -51,6 +53,7 @@ class HomeSearchView extends StatefulWidget {
 class _HomeSearchViewState extends State<HomeSearchView> {
   late final Stream<List<Product>> _productsStream;
   late final Stream<List<Shop>> _shopsStream;
+  ProductSortOption _sortOption = ProductSortOption.recommended;
 
   @override
   void initState() {
@@ -137,12 +140,18 @@ class _HomeSearchViewState extends State<HomeSearchView> {
                       autofocus: false,
                       decoration: InputDecoration(
                         hintText: 'Search products or shops...',
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: ShopWiseColors.search,
+                        ),
                         suffixIcon: IconButton(
                           tooltip: 'Filters',
                           onPressed: () =>
                               _showFilters(context, effectiveCategories),
-                          icon: const Icon(Icons.tune),
+                          icon: const Icon(
+                            Icons.tune,
+                            color: ShopWiseColors.olive,
+                          ),
                         ),
                         filled: true,
                         fillColor: ShopWiseColors.surface,
@@ -164,6 +173,11 @@ class _HomeSearchViewState extends State<HomeSearchView> {
                         minPrice: widget.minPrice,
                         maxPrice: widget.maxPrice,
                         availableOnly: widget.availableOnly,
+                        sortOption: _sortOption,
+                        onSortChanged: (option) {
+                          setState(() => _sortOption = option);
+                        },
+                        onClearSearchAndFilters: widget.onClearSearchAndFilters,
                         onEmptyState:
                             ({
                               required IconData icon,

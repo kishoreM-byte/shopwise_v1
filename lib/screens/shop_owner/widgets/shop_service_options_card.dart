@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/design_tokens.dart';
 
 class ShopServiceOptionsCard extends StatelessWidget {
   final bool deliveryAvailable;
@@ -25,31 +26,40 @@ class ShopServiceOptionsCard extends StatelessWidget {
     required this.onInstallationChargeChanged,
   });
 
-  static const Color dark = Color(0xFF0F172A);
-  static const Color secondary = Color(0xFF64748B);
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color green = Color(0xFF10B981);
+  static const Color dark = ShopWiseColors.textPrimary;
+  static const Color secondary = ShopWiseColors.textSecondary;
+  static const Color border = ShopWiseColors.border;
+  static const Color green = ShopWiseColors.olive;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ShopWiseColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
-                Icons.local_shipping_outlined,
-                color: Color(0xFF2563EB),
-                size: 22,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ShopWiseColors.oliveSoft,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: border),
+                ),
+                child: const Icon(
+                  Icons.handyman_outlined,
+                  color: ShopWiseColors.olive,
+                  size: 23,
+                ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Customer services',
@@ -67,18 +77,14 @@ class ShopServiceOptionsCard extends StatelessWidget {
 
           const Text(
             'Tell customers which services your shop provides.',
-            style: TextStyle(
-              color: secondary,
-              fontSize: 11,
-              height: 1.4,
-            ),
+            style: TextStyle(color: secondary, fontSize: 11, height: 1.4),
           ),
 
           const SizedBox(height: 18),
 
           _buildServiceRow(
             icon: Icons.local_shipping_rounded,
-            iconColor: const Color(0xFF2563EB),
+            iconColor: ShopWiseColors.search,
             title: 'Shop delivery',
             subtitle: deliveryAvailable
                 ? 'Customers can request delivery'
@@ -105,7 +111,7 @@ class ShopServiceOptionsCard extends StatelessWidget {
 
           _buildServiceRow(
             icon: Icons.handyman_rounded,
-            iconColor: const Color(0xFF8B5CF6),
+            iconColor: ShopWiseColors.olive,
             title: 'Installation',
             subtitle: installationAvailable
                 ? 'Customers can request installation'
@@ -142,8 +148,9 @@ class ShopServiceOptionsCard extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.09),
+            color: ShopWiseColors.oliveSoft,
             borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: border),
           ),
           child: Icon(icon, color: iconColor, size: 21),
         ),
@@ -165,20 +172,13 @@ class ShopServiceOptionsCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  color: secondary,
-                  fontSize: 10,
-                ),
+                style: const TextStyle(color: secondary, fontSize: 10),
               ),
             ],
           ),
         ),
 
-        Switch(
-          value: value,
-          activeThumbColor: green,
-          onChanged: onChanged,
-        ),
+        Switch(value: value, activeThumbColor: green, onChanged: onChanged),
       ],
     );
   }
@@ -191,9 +191,7 @@ class ShopServiceOptionsCard extends StatelessWidget {
   }) {
     return TextFormField(
       initialValue: value > 0 ? value.toStringAsFixed(0) : '',
-      keyboardType: const TextInputType.numberWithOptions(
-        decimal: true,
-      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: (text) {
         final double parsed = double.tryParse(text.trim()) ?? 0;
         onChanged(parsed < 0 ? 0 : parsed);
@@ -201,10 +199,21 @@ class ShopServiceOptionsCard extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: 'Enter amount',
-        prefixIcon: Icon(icon, color: secondary, size: 19),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(11),
+          child: Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: ShopWiseColors.oliveSoft,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, color: ShopWiseColors.olive, size: 17),
+          ),
+        ),
         prefixText: '₹ ',
         filled: true,
-        fillColor: const Color(0xFFF8FAFC),
+        fillColor: ShopWiseColors.background,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: border),
@@ -215,10 +224,7 @@ class ShopServiceOptionsCard extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: green,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: green, width: 1.5),
         ),
       ),
     );

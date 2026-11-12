@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/design_tokens.dart';
 
 import '../../../models/product.dart';
 
@@ -7,9 +8,9 @@ class ProductInfo extends StatelessWidget {
 
   const ProductInfo({super.key, required this.product});
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color dark = Color(0xFF0F172A);
-  static const Color secondary = Color(0xFF64748B);
+  static const Color primary = ShopWiseColors.emerald;
+  static const Color dark = ShopWiseColors.textPrimary;
+  static const Color secondary = ShopWiseColors.textSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ class ProductInfo extends StatelessWidget {
           child: Text(
             product.category.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFF047857),
+              color: ShopWiseColors.emeraldDeep,
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.7,
@@ -62,37 +63,42 @@ class ProductInfo extends StatelessWidget {
         const SizedBox(height: 14),
 
         // Rating
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 9,
+          runSpacing: 7,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF7ED),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.star_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 17,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    product.rating.toStringAsFixed(1),
-                    style: const TextStyle(
-                      color: Color(0xFF92400E),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+            if (product.reviewCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 17,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      product.rating.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: ShopWiseColors.search,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 9),
             Text(
-              '${product.reviewCount} reviews',
+              product.reviewCount > 0
+                  ? '${product.reviewCount} reviews'
+                  : 'No reviews yet',
               style: const TextStyle(
                 color: secondary,
                 fontSize: 12,
@@ -105,8 +111,10 @@ class ProductInfo extends StatelessWidget {
         const SizedBox(height: 18),
 
         // Price
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 9,
+          runSpacing: 3,
           children: [
             Text(
               '₹${product.price.toStringAsFixed(0)}',
@@ -118,26 +126,24 @@ class ProductInfo extends StatelessWidget {
               ),
             ),
             if (hasDiscount) ...[
-              const SizedBox(width: 10),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
                   '₹${product.originalPrice!.toStringAsFixed(0)}',
                   style: const TextStyle(
-                    color: Color(0xFF94A3B8),
+                    color: ShopWiseColors.textMuted,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     decoration: TextDecoration.lineThrough,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
                   '$discountPercent% OFF',
                   style: const TextStyle(
-                    color: Color(0xFF059669),
+                    color: ShopWiseColors.emerald,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -157,11 +163,9 @@ class ProductInfo extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFFFBEB), Color(0xFFFFF7ED)],
-              ),
+              color: ShopWiseColors.oliveSoft,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFDE68A)),
+              border: Border.all(color: ShopWiseColors.border),
             ),
             child: Row(
               children: [
@@ -169,12 +173,12 @@ class ProductInfo extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFF59E0B),
+                    color: ShopWiseColors.search,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.local_offer_rounded,
-                    color: Colors.white,
+                    color: ShopWiseColors.surface,
                     size: 17,
                   ),
                 ),
@@ -183,7 +187,7 @@ class ProductInfo extends StatelessWidget {
                   child: Text(
                     product.offerText!,
                     style: const TextStyle(
-                      color: Color(0xFF92400E),
+                      color: ShopWiseColors.search,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -200,8 +204,8 @@ class ProductInfo extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: product.isAvailable && product.stock > 0
-                ? const Color(0xFFF0FDF4)
-                : const Color(0xFFFEF2F2),
+                ? ShopWiseColors.success.withValues(alpha: 0.10)
+                : ShopWiseColors.error.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
@@ -212,8 +216,8 @@ class ProductInfo extends StatelessWidget {
                     : Icons.cancel_rounded,
                 size: 18,
                 color: product.isAvailable && product.stock > 0
-                    ? const Color(0xFF16A34A)
-                    : const Color(0xFFDC2626),
+                    ? ShopWiseColors.success
+                    : ShopWiseColors.error,
               ),
               const SizedBox(width: 9),
               Text(
@@ -222,8 +226,8 @@ class ProductInfo extends StatelessWidget {
                     : 'Currently unavailable',
                 style: TextStyle(
                   color: product.isAvailable && product.stock > 0
-                      ? const Color(0xFF166534)
-                      : const Color(0xFF991B1B),
+                      ? ShopWiseColors.success
+                      : ShopWiseColors.error,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
