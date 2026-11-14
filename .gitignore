@@ -67,3 +67,9 @@ rules-test/firestore-debug.log
 
 # Local backup files
 firestore.rules.backup_before_product_shop_ownership
+
+# Android Gradle build artifacts
+/android/build/
+
+# Local Firebase backup
+/lib/firebase_options.dart.backup

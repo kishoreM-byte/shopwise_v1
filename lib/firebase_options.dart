@@ -26,10 +26,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -58,5 +55,16 @@ class DefaultFirebaseOptions {
     messagingSenderId: '879325429404',
     projectId: 'shopwise-160a3',
     storageBucket: 'shopwise-160a3.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDsfL4tNS7MGqvTx6ILVxwqSi49XcGSnCI',
+    appId: '1:879325429404:ios:5fe957fc1df0e3acccb759',
+    messagingSenderId: '879325429404',
+    projectId: 'shopwise-160a3',
+    storageBucket: 'shopwise-160a3.firebasestorage.app',
+    androidClientId: '879325429404-eq5800n3b60es2plt5892e8kdsvgcr9s.apps.googleusercontent.com',
+    iosClientId: '879325429404-t9t1t80dj0nvcis5ujjkq2nk8r4enofo.apps.googleusercontent.com',
+    iosBundleId: 'com.shopwise.shopwiseV1',
   );
 }

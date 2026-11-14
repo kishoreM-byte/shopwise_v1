@@ -12,8 +12,17 @@
         "lib/firebase_options.dart": {
           "projectId": "shopwise-160a3",
           "configurations": {
+            "ios": "1:879325429404:ios:5fe957fc1df0e3acccb759",
             "android": "1:879325429404:android:0e8b1e51ac9a689dccb759"
           }
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "shopwise-160a3",
+          "appId": "1:879325429404:ios:5fe957fc1df0e3acccb759",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
         }
       }
     }
